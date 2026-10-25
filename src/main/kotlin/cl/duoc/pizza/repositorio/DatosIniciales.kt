@@ -4,6 +4,7 @@ import cl.duoc.pizza.modelo.Categoria
 import cl.duoc.pizza.modelo.Producto
 import cl.duoc.pizza.modelo.Tamano
 import cl.duoc.pizza.modelo.Usuario
+import cl.duoc.pizza.util.Seguridad
 
 /** Datos precargados al iniciar la app (no hay persistencia todavía). */
 object DatosIniciales {
@@ -11,7 +12,7 @@ object DatosIniciales {
         id = 1,
         nombre = "Administrador",
         email = "admin@duocpizza.cl",
-        password = "admin123",
+        passwordHash = Seguridad.hashSha256("admin123"),
         telefono = "",
         direccion = "",
         esAdmin = true,
