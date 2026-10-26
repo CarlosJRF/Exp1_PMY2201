@@ -3,8 +3,8 @@ package cl.duoc.pizza.repositorio
 import cl.duoc.pizza.modelo.Usuario
 
 class UsuarioRepositorio(usuariosIniciales: List<Usuario> = emptyList()) {
-    private val usuarios = mutableMapOf<Int, Usuario>()
-    private var ultimoId = 0
+    private val usuarios: MutableMap<Int, Usuario> = mutableMapOf<Int, Usuario>()
+    private var ultimoId: Int = 0
 
     init {
         usuariosIniciales.forEach { guardar(it) }

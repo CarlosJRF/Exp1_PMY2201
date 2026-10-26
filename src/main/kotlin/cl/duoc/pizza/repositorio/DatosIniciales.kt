@@ -8,7 +8,7 @@ import cl.duoc.pizza.util.Seguridad
 
 /** Datos precargados al iniciar la app (no hay persistencia todavía). */
 object DatosIniciales {
-    val admin = Usuario(
+    val admin: Usuario = Usuario(
         id = 1,
         nombre = "Administrador",
         email = "admin@duocpizza.cl",
@@ -39,7 +39,7 @@ object DatosIniciales {
     )
 
     val stock: Map<Int, Int> = productos.associate { producto ->
-        val unidades = when (producto.categoria) {
+        val unidades: Int = when (producto.categoria) {
             Categoria.PIZZA -> 10
             Categoria.BEBIDA -> 20
             Categoria.ACOMPANAMIENTO -> 15

@@ -1,5 +1,7 @@
 package cl.duoc.pizza.ui
 
+import cl.duoc.pizza.modelo.Pedido
+import cl.duoc.pizza.modelo.Producto
 import cl.duoc.pizza.servicio.InventarioServicio
 import cl.duoc.pizza.servicio.PedidoServicio
 
@@ -13,11 +15,11 @@ class MenuAdmin(
         private const val REPOSICION_MAXIMA = 1000
     }
 
-    private val opciones = listOf("Ver inventario", "Reponer stock", "Ver todos los pedidos")
+    private val opciones: List<String> = listOf("Ver inventario", "Reponer stock", "Ver todos los pedidos")
 
     fun mostrar() {
         while (true) {
-            val opcion = consola.menu("Menú administrador", opciones, "Cerrar sesión")
+            val opcion: Int = consola.menu("Menú administrador", opciones, "Cerrar sesión")
             consola.intentar {
                 when (opcion) {
                     1 -> verInventario()
@@ -32,7 +34,7 @@ class MenuAdmin(
     private fun verInventario() {
         consola.titulo("Inventario")
         consola.mensaje(Vistas.catalogo(inventario))
-        val stockBajo = inventario.productosConStockBajo()
+        val stockBajo: List<Producto> = inventario.productosConStockBajo()
         if (stockBajo.isNotEmpty()) {
             consola.mensaje("")
             consola.error("Stock bajo: ${stockBajo.joinToString { it.nombreCompleto }}")
@@ -41,10 +43,10 @@ class MenuAdmin(
 
     private fun reponerStock() {
         verInventario()
-        val id = consola.leerEntero("Id del producto (0 para volver)", 0, Int.MAX_VALUE)
+        val id: Int = consola.leerEntero("Id del producto (0 para volver)", 0, Int.MAX_VALUE)
         if (id == 0) return
-        val producto = inventario.buscarProducto(id)
-        val cantidad = consola.leerEntero("Unidades a agregar", 1, REPOSICION_MAXIMA)
+        val producto: Producto = inventario.buscarProducto(id)
+        val cantidad: Int = consola.leerEntero("Unidades a agregar", 1, REPOSICION_MAXIMA)
 
         inventario.reponer(producto, cantidad)
         consola.exito("Stock de ${producto.nombreCompleto}: ${inventario.stockDe(producto)} unidades")
@@ -52,7 +54,7 @@ class MenuAdmin(
 
     private fun verPedidos() {
         consola.titulo("Todos los pedidos")
-        val pedidos = pedidoServicio.todosLosPedidos()
+        val pedidos: List<Pedido> = pedidoServicio.todosLosPedidos()
         if (pedidos.isEmpty()) {
             consola.mensaje("No hay pedidos")
             return

@@ -1,6 +1,7 @@
 package cl.duoc.pizza.ui
 
 import cl.duoc.pizza.servicio.ErrorNegocio
+import java.io.Console
 
 /** Se lanza cuando la entrada estándar se cierra (por ejemplo, Ctrl+D o fin de un archivo). */
 class EntradaFinalizada : Exception()
@@ -22,7 +23,7 @@ class Consola {
     fun leerTexto(etiqueta: String): String {
         while (true) {
             print("$etiqueta: ")
-            val texto = leerLinea().trim()
+            val texto: String = leerLinea().trim()
             if (texto.isNotEmpty()) return texto
             error("Este campo no puede estar vacío")
         }
@@ -30,9 +31,9 @@ class Consola {
 
     /** Oculta lo que se escribe cuando hay una terminal real; con ./gradlew run se muestra. */
     fun leerPassword(etiqueta: String): String {
-        val terminal = System.console() ?: return leerTexto(etiqueta)
+        val terminal: Console = System.console() ?: return leerTexto(etiqueta)
         while (true) {
-            val password = terminal.readPassword("$etiqueta: ")?.let { String(it) } ?: throw EntradaFinalizada()
+            val password: String = terminal.readPassword("$etiqueta: ")?.let { String(it) } ?: throw EntradaFinalizada()
             if (password.isNotEmpty()) return password
             error("Este campo no puede estar vacío")
         }
@@ -41,7 +42,7 @@ class Consola {
     fun leerEntero(etiqueta: String, minimo: Int, maximo: Int): Int {
         while (true) {
             print("$etiqueta: ")
-            val numero = leerLinea().trim().toIntOrNull()
+            val numero: Int? = leerLinea().trim().toIntOrNull()
             if (numero != null && numero in minimo..maximo) return numero
             error("Ingresa un número entre $minimo y $maximo")
         }

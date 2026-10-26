@@ -14,18 +14,18 @@ import cl.duoc.pizza.ui.MenuPrincipal
 
 fun main() {
     // Repositorios (datos en memoria)
-    val usuarioRepositorio = UsuarioRepositorio(listOf(DatosIniciales.admin))
-    val productoRepositorio = ProductoRepositorio(DatosIniciales.productos)
-    val stockRepositorio = StockRepositorio(DatosIniciales.stock)
-    val pedidoRepositorio = PedidoRepositorio()
+    val usuarioRepositorio: UsuarioRepositorio = UsuarioRepositorio(listOf(DatosIniciales.admin))
+    val productoRepositorio: ProductoRepositorio = ProductoRepositorio(DatosIniciales.productos)
+    val stockRepositorio: StockRepositorio = StockRepositorio(DatosIniciales.stock)
+    val pedidoRepositorio: PedidoRepositorio = PedidoRepositorio()
 
     // Servicios (reglas de negocio)
-    val usuarioServicio = UsuarioServicio(usuarioRepositorio)
-    val inventarioServicio = InventarioServicio(productoRepositorio, stockRepositorio)
-    val pedidoServicio = PedidoServicio(pedidoRepositorio, inventarioServicio)
+    val usuarioServicio: UsuarioServicio = UsuarioServicio(usuarioRepositorio)
+    val inventarioServicio: InventarioServicio = InventarioServicio(productoRepositorio, stockRepositorio)
+    val pedidoServicio: PedidoServicio = PedidoServicio(pedidoRepositorio, inventarioServicio)
 
     // Interfaz de consola
-    val consola = Consola()
+    val consola: Consola = Consola()
     try {
         MenuPrincipal(consola, usuarioServicio, inventarioServicio, pedidoServicio).iniciar()
     } catch (e: EntradaFinalizada) {

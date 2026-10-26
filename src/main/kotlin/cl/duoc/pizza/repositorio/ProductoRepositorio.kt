@@ -5,7 +5,7 @@ import cl.duoc.pizza.modelo.Producto
 
 /** Catálogo de solo lectura; los productos se cargan al crear el repositorio. */
 class ProductoRepositorio(productos: List<Producto>) {
-    private val productos = productos.associateBy { it.id }
+    private val productos: Map<Int, Producto> = productos.associateBy { it.id }
 
     fun buscarPorId(id: Int): Producto? = productos[id]
 

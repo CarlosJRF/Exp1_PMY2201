@@ -25,7 +25,7 @@ class MenuPrincipal(
 
     private fun registrar() {
         consola.titulo("Registro de usuario")
-        val usuario = usuarioServicio.registrar(
+        val usuario: Usuario = usuarioServicio.registrar(
             nombre = consola.leerTexto("Nombre"),
             email = consola.leerTexto("Email"),
             password = consola.leerPassword("Contraseña (mín. ${UsuarioServicio.LARGO_MINIMO_PASSWORD} caracteres)"),
@@ -38,7 +38,7 @@ class MenuPrincipal(
 
     private fun iniciarSesion() {
         consola.titulo("Iniciar sesión")
-        val usuario = usuarioServicio.iniciarSesion(
+        val usuario: Usuario = usuarioServicio.iniciarSesion(
             email = consola.leerTexto("Email"),
             password = consola.leerPassword("Contraseña"),
         )

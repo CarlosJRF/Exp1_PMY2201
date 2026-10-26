@@ -3,8 +3,8 @@ package cl.duoc.pizza.repositorio
 import cl.duoc.pizza.modelo.Pedido
 
 class PedidoRepositorio {
-    private val pedidos = mutableMapOf<Int, Pedido>()
-    private var ultimoId = 0
+    private val pedidos: MutableMap<Int, Pedido> = mutableMapOf<Int, Pedido>()
+    private var ultimoId: Int = 0
 
     fun siguienteId(): Int = ++ultimoId
 

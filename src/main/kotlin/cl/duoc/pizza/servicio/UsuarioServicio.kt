@@ -8,8 +8,8 @@ class UsuarioServicio(private val repositorio: UsuarioRepositorio) {
 
     companion object {
         const val LARGO_MINIMO_PASSWORD = 6
-        private val FORMATO_EMAIL = Regex("^[\\w.+-]+@[\\w-]+(\\.[\\w-]+)+$")
-        private val FORMATO_TELEFONO = Regex("^\\+?\\d{8,12}$")
+        private val FORMATO_EMAIL: Regex = Regex("^[\\w.+-]+@[\\w-]+(\\.[\\w-]+)+$")
+        private val FORMATO_TELEFONO: Regex = Regex("^\\+?\\d{8,12}$")
     }
 
     fun registrar(
@@ -19,7 +19,7 @@ class UsuarioServicio(private val repositorio: UsuarioRepositorio) {
         telefono: String,
         direccion: String,
     ): Usuario {
-        val emailNormalizado = email.trim().lowercase()
+        val emailNormalizado: String = email.trim().lowercase()
 
         if (nombre.isBlank()) throw ErrorNegocio("El nombre es obligatorio")
         if (!FORMATO_EMAIL.matches(emailNormalizado)) throw ErrorNegocio("El email no tiene un formato válido")
@@ -34,7 +34,7 @@ class UsuarioServicio(private val repositorio: UsuarioRepositorio) {
         }
         if (direccion.isBlank()) throw ErrorNegocio("La dirección es obligatoria")
 
-        val usuario = Usuario(
+        val usuario: Usuario = Usuario(
             id = repositorio.siguienteId(),
             nombre = nombre.trim(),
             email = emailNormalizado,
@@ -47,7 +47,7 @@ class UsuarioServicio(private val repositorio: UsuarioRepositorio) {
     }
 
     fun iniciarSesion(email: String, password: String): Usuario {
-        val usuario = repositorio.buscarPorEmail(email)
+        val usuario: Usuario? = repositorio.buscarPorEmail(email)
         if (usuario == null || usuario.passwordHash != Seguridad.hashSha256(password)) {
             throw ErrorNegocio("Email o contraseña incorrectos")
         }
