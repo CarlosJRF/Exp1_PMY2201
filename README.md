@@ -8,8 +8,13 @@ pensado para evolucionar más adelante a una app móvil.
 - Registro de usuarios e inicio de sesión (contraseñas guardadas con hash SHA-256).
 - Catálogo de pizzas (3 tamaños), bebidas y acompañamientos.
 - Pedidos: agregar y quitar productos, confirmar y cancelar.
-- Control de stock: se valida al agregar, se descuenta al confirmar y se devuelve al cancelar.
-- Resumen de pedido con detalle, total y estado.
+- Control de stock: se valida al agregar, se descuenta al confirmar y se devuelve al cancelar,
+  con mensajes claros de disponibilidad (agotado, stock bajo, cuántas unidades quedan).
+- Descuentos automáticos (no acumulables, se aplica el mayor):
+  - 3 o más pizzas en el pedido: **15 %**.
+  - Compras desde **$30.000**: **10 %**.
+- Resumen de pedido con datos del cliente, detalle de productos (cantidad, precio unitario y subtotal),
+  subtotal, descuento aplicado, total y estado.
 - Menú de administrador: inventario con aviso de stock bajo, reposición y listado de pedidos.
 
 Los datos se guardan **en memoria**: al cerrar la aplicación se pierden.
@@ -41,12 +46,18 @@ Los clientes se crean desde la opción **Registrarse** del menú principal.
 ./gradlew test
 ```
 
+## Entrega en zip
+
+```bash
+git ls-files --cached --others --exclude-standard | zip -@ DuocPizza.zip
+```
+
 ## Estructura
 
 ```
 src/main/kotlin/cl/duoc/pizza/
 ├── Main.kt          # arma las dependencias e inicia la app
-├── modelo/          # Usuario, Producto, Pedido, ItemPedido y enums
+├── modelo/          # Usuario, Producto, Pedido, ItemPedido, Descuento y enums
 ├── repositorio/     # almacenamiento en memoria y datos iniciales
 ├── servicio/        # reglas de negocio (usuarios, inventario, pedidos, resumen)
 ├── ui/              # menús y lectura por consola

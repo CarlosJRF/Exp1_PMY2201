@@ -43,5 +43,6 @@ bin/
 .DS_Store
 
 ### Archivos internos (no subir) ###
+*.zip
 CLAUDE.md
 docs/DuocPizza-Guia.odt
