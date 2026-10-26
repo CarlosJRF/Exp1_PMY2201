@@ -26,12 +26,28 @@ class InventarioServicio(
 
     fun productosConStockBajo(): List<Producto> = catalogo().filter { tieneStockBajo(it) }
 
+    /** Texto de disponibilidad para mostrar al usuario: agotado, stock bajo o unidades disponibles. */
+    fun disponibilidad(producto: Producto): String {
+        val stock: Int = stockDe(producto)
+        return when {
+            stock == 0 -> "AGOTADO"
+            tieneStockBajo(producto) -> "¡Quedan $stock!"
+            else -> "stock: $stock"
+        }
+    }
+
+    /** Mensaje claro cuando no alcanzan las unidades: distingue un producto agotado de uno con poco stock. */
+    fun mensajeFaltaStock(producto: Producto, disponible: Int = stockDe(producto)): String =
+        if (disponible <= 0) {
+            "${producto.nombreCompleto} está agotado"
+        } else {
+            "Stock insuficiente de ${producto.nombreCompleto}: solo hay $disponible disponible(s)"
+        }
+
     fun descontar(producto: Producto, cantidad: Int) {
         validarCantidad(cantidad)
-        val disponible = stockDe(producto)
-        if (disponible < cantidad) {
-            throw ErrorNegocio("Stock insuficiente de ${producto.nombreCompleto} (disponible: $disponible)")
-        }
+        val disponible: Int = stockDe(producto)
+        if (disponible < cantidad) throw ErrorNegocio(mensajeFaltaStock(producto, disponible))
         stockRepositorio.actualizar(producto.id, disponible - cantidad)
     }
 

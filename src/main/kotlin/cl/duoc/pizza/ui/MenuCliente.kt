@@ -1,6 +1,10 @@
 package cl.duoc.pizza.ui
 
+import cl.duoc.pizza.modelo.Descuento
 import cl.duoc.pizza.modelo.EstadoPedido
+import cl.duoc.pizza.modelo.ItemPedido
+import cl.duoc.pizza.modelo.Pedido
+import cl.duoc.pizza.modelo.Producto
 import cl.duoc.pizza.modelo.Usuario
 import cl.duoc.pizza.servicio.ErrorNegocio
 import cl.duoc.pizza.servicio.InventarioServicio
@@ -19,7 +23,7 @@ class MenuCliente(
         private const val CANTIDAD_MAXIMA = 50
     }
 
-    private val opciones = listOf(
+    private val opciones: List<String> = listOf(
         "Ver catálogo",
         "Agregar producto al pedido",
         "Quitar producto del pedido",
@@ -31,7 +35,7 @@ class MenuCliente(
 
     fun mostrar() {
         while (true) {
-            val opcion = consola.menu("Menú cliente — ${usuario.nombre}", opciones, "Cerrar sesión")
+            val opcion: Int = consola.menu("Menú cliente — ${usuario.nombre}", opciones, "Cerrar sesión")
             consola.intentar {
                 when (opcion) {
                     1 -> verCatalogo()
@@ -50,36 +54,51 @@ class MenuCliente(
     private fun verCatalogo() {
         consola.titulo("Catálogo")
         consola.mensaje(Vistas.catalogo(inventario))
+        consola.mensaje("")
+        consola.mensaje(Vistas.promociones())
     }
 
     private fun agregarProducto() {
         verCatalogo()
-        val id = consola.leerEntero("Id del producto (0 para volver)", 0, Int.MAX_VALUE)
+        val id: Int = consola.leerEntero("Id del producto (0 para volver)", 0, Int.MAX_VALUE)
         if (id == 0) return
-        val producto = inventario.buscarProducto(id)
-        val cantidad = consola.leerEntero("Cantidad", 1, CANTIDAD_MAXIMA)
+        val producto: Producto = inventario.buscarProducto(id)
+        val pedido: Pedido = pedidoServicio.pedidoActual(usuario)
+        pedidoServicio.verificarDisponibilidad(pedido, producto, 1)
+        val disponible: Int = pedidoServicio.disponibleParaAgregar(pedido, producto)
+        consola.mensaje("Disponible para agregar: $disponible")
+        val cantidad: Int = consola.leerEntero("Cantidad", 1, minOf(CANTIDAD_MAXIMA, disponible))
 
-        val pedido = pedidoServicio.pedidoActual(usuario)
         pedidoServicio.agregarProducto(pedido, producto, cantidad)
-        consola.exito("Agregado: $cantidad x ${producto.nombreCompleto}. Total: ${Formato.precio(pedido.total)}")
+        consola.exito("Agregado: $cantidad x ${producto.nombreCompleto}. ${totalConDescuento(pedido)}")
+        if (inventario.tieneStockBajo(producto)) {
+            consola.mensaje("Aviso: ${producto.nombreCompleto} tiene poco stock (${inventario.disponibilidad(producto)})")
+        }
     }
 
     private fun quitarProducto() {
-        val pedido = pedidoServicio.pedidoActual(usuario)
+        val pedido: Pedido = pedidoServicio.pedidoActual(usuario)
         if (pedido.estaVacio) throw ErrorNegocio("Tu pedido está vacío")
 
         consola.titulo("Quitar producto")
-        val items = pedido.items
+        val items: List<ItemPedido> = pedido.items
         items.forEachIndexed { indice, item ->
             consola.mensaje("${indice + 1}. ${item.cantidad} x ${item.producto.nombreCompleto}")
         }
-        val numero = consola.leerEntero("Producto a quitar (0 para volver)", 0, items.size)
+        val numero: Int = consola.leerEntero("Producto a quitar (0 para volver)", 0, items.size)
         if (numero == 0) return
-        val item = items[numero - 1]
-        val cantidad = consola.leerEntero("Cantidad a quitar", 1, item.cantidad)
+        val item: ItemPedido = items[numero - 1]
+        val cantidad: Int = consola.leerEntero("Cantidad a quitar", 1, item.cantidad)
 
         pedidoServicio.quitarProducto(pedido, item.producto, cantidad)
-        consola.exito("Quitado: $cantidad x ${item.producto.nombreCompleto}. Total: ${Formato.precio(pedido.total)}")
+        consola.exito("Quitado: $cantidad x ${item.producto.nombreCompleto}. ${totalConDescuento(pedido)}")
+    }
+
+    /** "Total: $X" y, si corresponde, el descuento aplicado. */
+    private fun totalConDescuento(pedido: Pedido): String {
+        val descuento: Descuento? = pedido.descuento
+        val total: String = "Total: ${Formato.precio(pedido.total)}"
+        return if (descuento == null) total else "$total (incluye ${descuento.porcentaje}% de descuento)"
     }
 
     private fun verPedidoActual() {
@@ -88,7 +107,7 @@ class MenuCliente(
     }
 
     private fun confirmarPedido() {
-        val pedido = pedidoServicio.pedidoActual(usuario)
+        val pedido: Pedido = pedidoServicio.pedidoActual(usuario)
         if (pedido.estaVacio) throw ErrorNegocio("Tu pedido está vacío")
 
         verPedidoActual()
@@ -100,7 +119,7 @@ class MenuCliente(
 
     private fun verMisPedidos() {
         consola.titulo("Mis pedidos")
-        val pedidos = pedidoServicio.pedidosDe(usuario).filter { !it.estaVacio }
+        val pedidos: List<Pedido> = pedidoServicio.pedidosDe(usuario).filter { !it.estaVacio }
         if (pedidos.isEmpty()) {
             consola.mensaje("Aún no tienes pedidos")
             return
@@ -109,15 +128,15 @@ class MenuCliente(
     }
 
     private fun cancelarPedido() {
-        val cancelables = pedidoServicio.pedidosDe(usuario)
+        val cancelables: List<Pedido> = pedidoServicio.pedidosDe(usuario)
             .filter { !it.estaVacio && it.estado != EstadoPedido.CANCELADO }
         if (cancelables.isEmpty()) throw ErrorNegocio("No tienes pedidos para cancelar")
 
         consola.titulo("Cancelar pedido")
         cancelables.forEach { consola.mensaje(Vistas.lineaPedido(it)) }
-        val id = consola.leerEntero("Número de pedido (0 para volver)", 0, Int.MAX_VALUE)
+        val id: Int = consola.leerEntero("Número de pedido (0 para volver)", 0, Int.MAX_VALUE)
         if (id == 0) return
-        val pedido = cancelables.find { it.id == id } ?: throw ErrorNegocio("No tienes un pedido #$id para cancelar")
+        val pedido: Pedido = cancelables.find { it.id == id } ?: throw ErrorNegocio("No tienes un pedido #$id para cancelar")
 
         if (consola.confirmar("¿Cancelar el pedido #${pedido.id}?")) {
             pedidoServicio.cancelar(pedido)

@@ -45,8 +45,24 @@ class PedidoServicioTest {
     fun `no permite agregar mas que el stock disponible`() {
         val pedido = servicio.pedidoActual(usuario)
         servicio.agregarProducto(pedido, pizza, 2)
-        assertFailsWith<ErrorNegocio> { servicio.agregarProducto(pedido, pizza, 2) }
+        val error = assertFailsWith<ErrorNegocio> { servicio.agregarProducto(pedido, pizza, 2) }
+        assertEquals("Stock insuficiente de Margarita: puedes agregar hasta 1 más", error.message)
         assertEquals(2, pedido.cantidadDe(pizza))
+        assertEquals(1, servicio.disponibleParaAgregar(pedido, pizza))
+    }
+
+    @Test
+    fun `avisa cuando el producto esta agotado o ya esta todo en el pedido`() {
+        val pedido = servicio.pedidoActual(usuario)
+        servicio.agregarProducto(pedido, pizza, 3)
+        val enPedido = assertFailsWith<ErrorNegocio> { servicio.verificarDisponibilidad(pedido, pizza, 1) }
+        assertEquals("Ya tienes en tu pedido todo el stock de Margarita (3)", enPedido.message)
+
+        servicio.confirmar(pedido)
+        val agotado = assertFailsWith<ErrorNegocio> {
+            servicio.agregarProducto(servicio.pedidoActual(usuario), pizza, 1)
+        }
+        assertEquals("Margarita está agotado", agotado.message)
     }
 
     @Test
