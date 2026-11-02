@@ -1,6 +1,7 @@
 package cl.duoc.pizza.servicio
 
 import cl.duoc.pizza.modelo.Categoria
+import cl.duoc.pizza.modelo.EstadoPedido
 import cl.duoc.pizza.modelo.Pedido
 import cl.duoc.pizza.modelo.Producto
 import cl.duoc.pizza.modelo.Tamano
@@ -8,7 +9,7 @@ import cl.duoc.pizza.modelo.Cliente
 import java.time.LocalDateTime
 import kotlin.test.Test
 import kotlin.test.assertContains
-import kotlin.test.assertFalse
+import kotlin.test.assertEquals
 
 class ResumenPedidoTest {
     private val usuario = Cliente(1, "Ana", "ana@duoc.cl", "hash", "912345678", "Av. Siempre Viva 123")
@@ -21,19 +22,21 @@ class ResumenPedidoTest {
 
         val resumen = ResumenPedido.generar(pedido)
 
-        assertContains(resumen, "Pedido #7  (En carrito)")
-        assertContains(resumen, "25-10-2026 20:30")
+        assertContains(resumen, "DuocPizza · Pedido #7")
+        assertContains(resumen, "Fecha:     25-10-2026 20:30")
+        assertContains(resumen, "Estado:    En carrito")
         assertContains(resumen, "Nombre:    Ana")
         assertContains(resumen, "Email:     ana@duoc.cl")
         assertContains(resumen, "Teléfono:  912345678")
         assertContains(resumen, "Dirección: Av. Siempre Viva 123")
-        assertContains(resumen, "2 x Margarita Mediana ($9.990 c/u)")
+        assertContains(resumen, "Producto                   Precio Cant.     Subtotal")
+        assertContains(resumen, "Margarita Mediana          $9.990     2      $19.980")
         assertContains(resumen, "Unidades: 2")
         assertContains(resumen, "$19.980")
         assertContains(resumen, "IVA 19%")
         assertContains(resumen, "$3.796")
         assertContains(resumen, "$23.776")
-        assertFalse(resumen.contains("Descuento"))
+        assertContains(resumen, "Descuento (no aplica)")
         assertContains(resumen, "Notas:     Sin notas")
     }
 
@@ -49,6 +52,28 @@ class ResumenPedidoTest {
         assertContains(resumen, "-$3.996")
         assertContains(resumen, "$6.833")
         assertContains(resumen, "$42.797")
+    }
+
+    @Test
+    fun `el resumen muestra el estado del pedido confirmado`() {
+        val pedido = Pedido(10, usuario)
+        pedido.agregar(margarita, 1)
+        pedido.cambiarEstado(EstadoPedido.EN_PREPARACION)
+        assertContains(ResumenPedido.generar(pedido), "Estado:    En preparación")
+
+        pedido.cambiarEstado(EstadoPedido.LISTO)
+        pedido.cambiarEstado(EstadoPedido.EN_CAMINO)
+        assertContains(ResumenPedido.generar(pedido), "Estado:    En camino")
+    }
+
+    @Test
+    fun `todas las lineas caben en el ancho del resumen`() {
+        val pedido = Pedido(11, usuario)
+        pedido.agregar(margarita, 12)
+        pedido.agregar(Producto(2, "Napolitana", Categoria.PIZZA, 14990, Tamano.FAMILIAR), 2)
+
+        val anchoMaximo: Int = ResumenPedido.generar(pedido).lines().maxOf { it.length }
+        assertEquals(52, anchoMaximo)
     }
 
     @Test
