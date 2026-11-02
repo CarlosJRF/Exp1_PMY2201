@@ -1,10 +1,10 @@
 package cl.duoc.pizza.ui
 
-import cl.duoc.pizza.modelo.Descuento
 import cl.duoc.pizza.modelo.EstadoPedido
 import cl.duoc.pizza.modelo.ItemPedido
 import cl.duoc.pizza.modelo.Pedido
 import cl.duoc.pizza.modelo.Producto
+import cl.duoc.pizza.modelo.Totales
 import cl.duoc.pizza.modelo.Usuario
 import cl.duoc.pizza.servicio.ErrorNegocio
 import cl.duoc.pizza.servicio.InventarioServicio
@@ -94,11 +94,11 @@ class MenuCliente(
         consola.exito("Quitado: $cantidad x ${item.producto.nombreCompleto}. ${totalConDescuento(pedido)}")
     }
 
-    /** "Total: $X" y, si corresponde, el descuento aplicado. */
+    /** "Total: $X" (con IVA) y, si corresponde, el descuento aplicado. */
     private fun totalConDescuento(pedido: Pedido): String {
-        val descuento: Descuento? = pedido.descuento
-        val total: String = "Total: ${Formato.precio(pedido.total)}"
-        return if (descuento == null) total else "$total (incluye ${descuento.porcentaje}% de descuento)"
+        val totales: Totales = pedido.totales
+        val total: String = "Total con IVA: ${Formato.precio(totales.total)}"
+        return if (totales.descuento == 0) total else "$total (incluye ${Formato.precio(totales.descuento)} de descuento)"
     }
 
     private fun verPedidoActual() {

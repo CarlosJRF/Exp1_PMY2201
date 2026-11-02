@@ -1,14 +1,17 @@
 package cl.duoc.pizza.ui
 
 import cl.duoc.pizza.modelo.Pedido
+import cl.duoc.pizza.modelo.Repartidor
 import cl.duoc.pizza.servicio.InventarioServicio
 import cl.duoc.pizza.servicio.PedidoServicio
+import cl.duoc.pizza.servicio.RepartoServicio
 import cl.duoc.pizza.servicio.ReporteDiario
 
 class MenuAdmin(
     private val consola: Consola,
     private val inventario: InventarioServicio,
     private val pedidoServicio: PedidoServicio,
+    private val reparto: RepartoServicio,
 ) {
 
     companion object {
@@ -20,7 +23,8 @@ class MenuAdmin(
         "Reponer ingrediente",
         "Ver todos los pedidos",
         "Reporte del día",
-        "Avanzar estado de un pedido",
+        "Marcar pedido como listo",
+        "Asignar repartidor a un pedido listo",
     )
 
     fun mostrar() {
@@ -32,7 +36,8 @@ class MenuAdmin(
                     2 -> reponerIngrediente()
                     3 -> verPedidos()
                     4 -> verReporteDelDia()
-                    5 -> avanzarEstado()
+                    5 -> marcarListo()
+                    6 -> asignarRepartidor()
                 }
             }
             if (opcion == 0) return
@@ -76,12 +81,24 @@ class MenuAdmin(
         consola.mensaje(ReporteDiario.generar(pedidoServicio.pedidosDelDia()))
     }
 
-    private fun avanzarEstado() {
+    private fun marcarListo() {
+        val pedido: Pedido = elegirPedido() ?: return
+        pedidoServicio.marcarListo(pedido)
+        consola.exito("Pedido #${pedido.id}: ${pedido.estadoVisible}")
+    }
+
+    private fun asignarRepartidor() {
+        consola.titulo("Repartidores")
+        reparto.repartidores().forEach { consola.mensaje(Vistas.lineaRepartidor(it)) }
+        val pedido: Pedido = elegirPedido() ?: return
+        val repartidor: Repartidor = reparto.asignar(pedido)
+        consola.exito("Pedido #${pedido.id} asignado a ${repartidor.nombre} (${repartidor.distanciaKm} km): ${pedido.estadoVisible}")
+    }
+
+    /** Muestra los pedidos y devuelve el elegido, o null si el usuario vuelve. */
+    private fun elegirPedido(): Pedido? {
         verPedidos()
         val id: Int = consola.leerEntero("Número de pedido (0 para volver)", 0, Int.MAX_VALUE)
-        if (id == 0) return
-        val pedido: Pedido = pedidoServicio.buscarPedido(id)
-        pedidoServicio.avanzarEstado(pedido)
-        consola.exito("Pedido #${pedido.id}: ${pedido.estadoVisible}")
+        return if (id == 0) null else pedidoServicio.buscarPedido(id)
     }
 }

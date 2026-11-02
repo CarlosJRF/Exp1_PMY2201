@@ -1,6 +1,9 @@
 package cl.duoc.pizza.servicio
 
-import cl.duoc.pizza.modelo.Descuento
+import cl.duoc.pizza.modelo.PIZZAS_PARA_DESCUENTO
+import cl.duoc.pizza.modelo.PORCENTAJE_DESCUENTO
+import cl.duoc.pizza.modelo.PORCENTAJE_IVA
+import cl.duoc.pizza.modelo.Totales
 import cl.duoc.pizza.modelo.Pedido
 import cl.duoc.pizza.util.Formato
 
@@ -9,7 +12,7 @@ object ResumenPedido {
 
     /**
      * Genera el texto del resumen con tres bloques: datos del pedido, datos del cliente
-     * y detalle de productos con subtotal, descuento y total. Quien lo llama decide dónde mostrarlo.
+     * y detalle de productos con subtotal, descuento, IVA y total. Quien lo llama decide dónde mostrarlo.
      */
     fun generar(pedido: Pedido): String = buildString {
         val linea: String = "-".repeat(ANCHO)
@@ -35,12 +38,13 @@ object ResumenPedido {
         }
         appendLine(linea)
         appendLine("Unidades: ${pedido.cantidadUnidades}")
-        appendLine(alinear("Subtotal", Formato.precio(pedido.subtotal)))
-        val descuento: Descuento? = pedido.descuento
-        if (descuento != null) {
-            appendLine(alinear("Descuento ${descuento.porcentaje}% (${descuento.descripcion})", Formato.precio(-descuento.monto)))
+        val totales: Totales = pedido.totales
+        appendLine(alinear("Subtotal", Formato.precio(totales.subtotal)))
+        if (totales.descuento > 0) {
+            appendLine(alinear("Descuento $PORCENTAJE_DESCUENTO% (más de $PIZZAS_PARA_DESCUENTO pizzas)", Formato.precio(-totales.descuento)))
         }
-        append(alinear("TOTAL", Formato.precio(pedido.total)))
+        appendLine(alinear("IVA $PORCENTAJE_IVA%", Formato.precio(totales.impuesto)))
+        append(alinear("TOTAL", Formato.precio(totales.total)))
     }
 
     /** Texto a la izquierda y monto a la derecha dentro del ancho del resumen. */

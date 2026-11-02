@@ -30,20 +30,23 @@ class ResumenPedidoTest {
         assertContains(resumen, "2 x Margarita Mediana ($9.990 c/u)")
         assertContains(resumen, "Unidades: 2")
         assertContains(resumen, "$19.980")
-        assertContains(resumen, "TOTAL")
+        assertContains(resumen, "IVA 19%")
+        assertContains(resumen, "$3.796")
+        assertContains(resumen, "$23.776")
         assertFalse(resumen.contains("Descuento"))
     }
 
     @Test
     fun `el resumen muestra el descuento aplicado`() {
         val pedido = Pedido(8, usuario)
-        pedido.agregar(margarita, 3)
+        pedido.agregar(margarita, 4)
 
         val resumen = ResumenPedido.generar(pedido)
 
-        assertContains(resumen, "$29.970")
-        assertContains(resumen, "Descuento 15% (3 o más pizzas)")
-        assertContains(resumen, "-$4.496")
-        assertContains(resumen, "$25.474")
+        assertContains(resumen, "$39.960")
+        assertContains(resumen, "Descuento 10% (más de 3 pizzas)")
+        assertContains(resumen, "-$3.996")
+        assertContains(resumen, "$6.833")
+        assertContains(resumen, "$42.797")
     }
 }

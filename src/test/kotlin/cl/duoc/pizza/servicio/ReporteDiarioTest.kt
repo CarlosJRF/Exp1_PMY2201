@@ -43,7 +43,7 @@ class ReporteDiarioTest {
         assertContains(reporte, "Reporte del día 02-11-2026: 3 pedido(s)")
         assertContains(reporte, "#2  Cliente: Luis")
         assertContains(reporte, "Pizzas: 1 x Margarita Mediana")
-        assertContains(reporte, "Total: $11.280  Estado: Listo")
+        assertContains(reporte, "Total: $13.423  Estado: Listo")
         assertContains(reporte, "Completados (2): #2, #3")
         assertContains(reporte, "Pendientes (1): #1")
     }

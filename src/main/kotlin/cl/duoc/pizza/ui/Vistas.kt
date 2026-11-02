@@ -1,8 +1,11 @@
 package cl.duoc.pizza.ui
 
 import cl.duoc.pizza.modelo.Categoria
-import cl.duoc.pizza.modelo.Descuento
+import cl.duoc.pizza.modelo.PIZZAS_PARA_DESCUENTO
+import cl.duoc.pizza.modelo.PORCENTAJE_DESCUENTO
+import cl.duoc.pizza.modelo.PORCENTAJE_IVA
 import cl.duoc.pizza.modelo.Pedido
+import cl.duoc.pizza.modelo.Repartidor
 import cl.duoc.pizza.servicio.InventarioServicio
 import cl.duoc.pizza.util.Formato
 
@@ -26,10 +29,13 @@ object Vistas {
             "${(indice + 1).toString().padStart(2)}. ${entrada.key.padEnd(20)} ${entrada.value.toString().padStart(4)}"
         }
 
-    /** Explica las reglas de descuento vigentes (ver [Descuento]). */
+    /** Explica el descuento y el impuesto vigentes (ver [cl.duoc.pizza.modelo.calcularTotal]). */
     fun promociones(): String =
-        "Promociones (no acumulables): ${Descuento.PIZZAS_MINIMAS} o más pizzas = ${Descuento.PORCENTAJE_POR_PIZZAS}% dcto. · " +
-            "Compras desde ${Formato.precio(Descuento.SUBTOTAL_MINIMO)} = ${Descuento.PORCENTAJE_POR_MONTO}% dcto."
+        "Promoción: más de $PIZZAS_PARA_DESCUENTO pizzas = $PORCENTAJE_DESCUENTO% dcto. · Precios sin IVA ($PORCENTAJE_IVA%)."
+
+    fun lineaRepartidor(repartidor: Repartidor): String =
+        "${repartidor.nombre.padEnd(16)} ${repartidor.distanciaKm.toString().padStart(4)} km  " +
+            if (repartidor.disponible) "Disponible" else "En reparto"
 
     fun lineaPedido(pedido: Pedido): String =
         "#${pedido.id}  ${Formato.fecha(pedido.fecha)}  ${pedido.usuario.email.padEnd(24)} " +

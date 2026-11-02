@@ -2,6 +2,7 @@ package cl.duoc.pizza.repositorio
 
 import cl.duoc.pizza.modelo.Categoria
 import cl.duoc.pizza.modelo.Producto
+import cl.duoc.pizza.modelo.Repartidor
 import cl.duoc.pizza.modelo.Tamano
 import cl.duoc.pizza.modelo.Usuario
 import cl.duoc.pizza.util.Seguridad
@@ -46,6 +47,12 @@ object DatosIniciales {
         Producto(15, "Agua mineral 500ml", Categoria.BEBIDA, 1290),
         Producto(16, "Palitos de ajo", Categoria.ACOMPANAMIENTO, 3490),
         Producto(17, "Papas fritas", Categoria.ACOMPANAMIENTO, 2990),
+    )
+
+    val repartidores: List<Repartidor> = listOf(
+        Repartidor(1, "Pedro Soto", "+56911111111", 2.5),
+        Repartidor(2, "Camila Rojas", "+56922222222", 0.8),
+        Repartidor(3, "Diego Muñoz", "+56933333333", 4.1),
     )
 
     /** Inventario inicial: nombre del ingrediente -> cantidad disponible. */

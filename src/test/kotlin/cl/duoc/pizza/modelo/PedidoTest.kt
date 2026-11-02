@@ -11,12 +11,13 @@ class PedidoTest {
     private val bebida = Producto(2, "Coca-Cola 1.5L", Categoria.BEBIDA, 2490)
 
     @Test
-    fun `total suma los subtotales de los items`() {
+    fun `total suma los subtotales de los items mas IVA`() {
         val pedido = Pedido(1, usuario)
         pedido.agregar(margarita, 2)
         pedido.agregar(bebida, 1)
 
-        assertEquals(8990 * 2 + 2490, pedido.total)
+        assertEquals(8990 * 2 + 2490, pedido.subtotal)
+        assertEquals(20470 + 3889, pedido.total) // IVA: 3.889,3 -> 3.889
     }
 
     @Test

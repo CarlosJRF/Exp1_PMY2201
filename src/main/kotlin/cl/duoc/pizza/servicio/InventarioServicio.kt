@@ -28,12 +28,16 @@ class InventarioServicio(
     fun ingredientesConStockBajo(): List<String> =
         ingredientes().filter { it.value <= UMBRAL_STOCK_BAJO }.keys.toList()
 
+    /** Cantidad de cada ingrediente para preparar un lote de [cantidadPizzas], según lo que usa una pizza. */
+    fun cantidadParaLote(ingredientes: Map<String, Int>, cantidadPizzas: Int): Map<String, Int> =
+        ingredientes.mapValues { (_, porUnidad) -> porUnidad * cantidadPizzas }
+
     /** Total de cada ingrediente que necesitan los items. */
     fun necesarios(items: List<ItemPedido>): Map<String, Int> {
         val total: MutableMap<String, Int> = mutableMapOf()
         for (item in items) {
-            for ((ingrediente, porUnidad) in item.producto.ingredientes) {
-                total[ingrediente] = (total[ingrediente] ?: 0) + porUnidad * item.cantidad
+            for ((ingrediente, cantidad) in cantidadParaLote(item.producto.ingredientes, item.cantidad)) {
+                total[ingrediente] = (total[ingrediente] ?: 0) + cantidad
             }
         }
         return total
@@ -69,9 +73,11 @@ class InventarioServicio(
     }
 
     /** Revisa cada ingrediente que necesitan los items y devuelve los que no alcanzan (vacío si alcanza todo). */
-    fun evaluarDisponibilidad(items: List<ItemPedido>): List<IngredienteFaltante> {
+    fun evaluarDisponibilidad(items: List<ItemPedido>): List<IngredienteFaltante> = faltantesDe(necesarios(items))
+
+    private fun faltantesDe(necesarios: Map<String, Int>): List<IngredienteFaltante> {
         val faltantes: MutableList<IngredienteFaltante> = mutableListOf()
-        for ((ingrediente, necesario) in necesarios(items)) {
+        for ((ingrediente, necesario) in necesarios) {
             when (val nivel: NivelIngrediente = nivelDe(ingrediente, necesario)) {
                 NivelIngrediente.SUFICIENTE -> continue
                 NivelIngrediente.INSUFICIENTE, NivelIngrediente.AGOTADO ->
@@ -98,12 +104,28 @@ class InventarioServicio(
         append("  4. Volver a intentar el pedido.")
     }
 
-    /** Descuenta los ingredientes de los items. Si falta alguno, no descuenta nada. */
+    /**
+     * Calcula lo que necesita un lote de [cantidadPizzas] y lo descuenta del inventario.
+     * Si falta algún ingrediente no descuenta nada. Devuelve las cantidades usadas.
+     */
+    fun prepararLote(ingredientes: Map<String, Int>, cantidadPizzas: Int): Map<String, Int> {
+        if (cantidadPizzas <= 0) throw ErrorNegocio("La cantidad de pizzas debe ser mayor a 0")
+        val necesarios: Map<String, Int> = cantidadParaLote(ingredientes, cantidadPizzas)
+        val faltantes: List<IngredienteFaltante> = faltantesDe(necesarios)
+        if (faltantes.isNotEmpty()) throw ErrorNegocio(mensajeFaltantes(faltantes))
+
+        for ((ingrediente, necesario) in necesarios) {
+            stockRepositorio.actualizar(ingrediente, stockDe(ingrediente) - necesario)
+        }
+        return necesarios
+    }
+
+    /** Prepara cada item como un lote. Si falta algún ingrediente para el total, no descuenta nada. */
     fun descontar(items: List<ItemPedido>) {
         val faltantes: List<IngredienteFaltante> = evaluarDisponibilidad(items)
         if (faltantes.isNotEmpty()) throw ErrorNegocio(mensajeFaltantes(faltantes))
-        for ((ingrediente, necesario) in necesarios(items)) {
-            stockRepositorio.actualizar(ingrediente, stockDe(ingrediente) - necesario)
+        for (item in items) {
+            prepararLote(item.producto.ingredientes, item.cantidad)
         }
     }
 

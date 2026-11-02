@@ -43,7 +43,8 @@ class PedidoServicioTest {
         val pedido = servicio.pedidoActual(usuario)
         servicio.agregarProducto(pedido, pizza, 2)
         servicio.agregarProducto(pedido, bebida, 3)
-        assertEquals(2 * 9990 + 3 * 1290, pedido.total)
+        assertEquals(2 * 9990 + 3 * 1290, pedido.subtotal)
+        assertEquals(23850 + 4532, pedido.total)
     }
 
     @Test
@@ -93,17 +94,15 @@ class PedidoServicioTest {
     }
 
     @Test
-    fun `el estado avanza de en preparacion a listo y en camino`() {
+    fun `un pedido en preparacion se marca como listo`() {
         val pedido = servicio.pedidoActual(usuario)
         servicio.agregarProducto(pedido, pizza, 1)
-        assertFailsWith<ErrorNegocio> { servicio.avanzarEstado(pedido) }
+        assertFailsWith<ErrorNegocio> { servicio.marcarListo(pedido) }
 
         servicio.confirmar(pedido)
-        servicio.avanzarEstado(pedido)
+        servicio.marcarListo(pedido)
         assertEquals(EstadoPedido.LISTO, pedido.estado)
-        servicio.avanzarEstado(pedido)
-        assertEquals(EstadoPedido.EN_CAMINO, pedido.estado)
-        assertFailsWith<ErrorNegocio> { servicio.avanzarEstado(pedido) }
+        assertFailsWith<ErrorNegocio> { servicio.marcarListo(pedido) }
     }
 
     @Test
@@ -123,7 +122,7 @@ class PedidoServicioTest {
         val pedido = servicio.pedidoActual(usuario)
         servicio.agregarProducto(pedido, pizza, 1)
         servicio.confirmar(pedido)
-        servicio.avanzarEstado(pedido)
+        servicio.marcarListo(pedido)
         assertFailsWith<ErrorNegocio> { servicio.cancelar(pedido) }
     }
 

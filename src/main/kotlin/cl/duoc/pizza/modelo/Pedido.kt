@@ -17,20 +17,26 @@ class Pedido(
 
     var estado: EstadoPedido? = null
 
+    /** Repartidor asignado cuando el pedido sale en camino. */
+    var repartidor: Repartidor? = null
+
     val estadoVisible: String
         get() = estado?.nombreVisible ?: "En carrito"
 
-    /** Suma de los subtotales, antes de descuentos. */
+    /** Suma de los subtotales, antes de descuentos e impuestos. */
     val subtotal: Int
         get() = _items.sumOf { it.subtotal }
 
-    /** Descuento que corresponde según las reglas de [Descuento], o null si no aplica ninguno. */
-    val descuento: Descuento?
-        get() = Descuento.calcular(_items)
+    val cantidadPizzas: Int
+        get() = _items.filter { it.producto.categoria == Categoria.PIZZA }.sumOf { it.cantidad }
 
-    /** Monto final a pagar: subtotal menos el descuento (si hay). */
+    /** Subtotal, descuento, IVA y total según [calcularTotal]. */
+    val totales: Totales
+        get() = calcularTotal(subtotal, cantidadPizzas)
+
+    /** Monto final a pagar. */
     val total: Int
-        get() = subtotal - (descuento?.monto ?: 0)
+        get() = totales.total
 
     val cantidadUnidades: Int
         get() = _items.sumOf { it.cantidad }

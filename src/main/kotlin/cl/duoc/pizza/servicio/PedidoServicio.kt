@@ -58,13 +58,13 @@ class PedidoServicio(
         pedido.estado = EstadoPedido.EN_PREPARACION
     }
 
-    /** Pasa el pedido al siguiente estado: En preparación -> Listo -> En camino. */
-    fun avanzarEstado(pedido: Pedido) {
-        pedido.estado = when (pedido.estado) {
+    /** Pasa un pedido en preparación a Listo. Para salir En camino se asigna un repartidor (RepartoServicio). */
+    fun marcarListo(pedido: Pedido) {
+        when (pedido.estado) {
             null -> throw ErrorNegocio("El pedido #${pedido.id} aún no está confirmado")
-            EstadoPedido.EN_PREPARACION -> EstadoPedido.LISTO
-            EstadoPedido.LISTO -> EstadoPedido.EN_CAMINO
-            EstadoPedido.EN_CAMINO -> throw ErrorNegocio("El pedido #${pedido.id} ya está en camino")
+            EstadoPedido.EN_PREPARACION -> pedido.estado = EstadoPedido.LISTO
+            EstadoPedido.LISTO, EstadoPedido.EN_CAMINO ->
+                throw ErrorNegocio("El pedido #${pedido.id} ya está ${pedido.estadoVisible.lowercase()}")
         }
     }
 

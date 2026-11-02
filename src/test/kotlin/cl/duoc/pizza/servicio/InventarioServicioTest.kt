@@ -58,6 +58,21 @@ class InventarioServicioTest {
     }
 
     @Test
+    fun `preparar un lote calcula los ingredientes y actualiza el inventario`() {
+        assertEquals(mapOf("Masa" to 2, "Queso" to 4), inventario.cantidadParaLote(pizza.ingredientes, 2))
+
+        val usados = inventario.prepararLote(pizza.ingredientes, 3)
+        assertEquals(mapOf("Masa" to 3, "Queso" to 6), usados)
+        assertEquals(2, inventario.stockDe("Masa"))
+        assertEquals(0, inventario.stockDe("Queso"))
+
+        val error = assertFailsWith<ErrorNegocio> { inventario.prepararLote(pizza.ingredientes, 1) }
+        assertContains(error.message!!, "Queso: agotado")
+        assertEquals(2, inventario.stockDe("Masa"))
+        assertFailsWith<ErrorNegocio> { inventario.prepararLote(pizza.ingredientes, 0) }
+    }
+
+    @Test
     fun `reponer aumenta el stock del ingrediente`() {
         inventario.reponer("Agua", 10)
         assertEquals(10, inventario.stockDe("Agua"))

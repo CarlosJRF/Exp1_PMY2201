@@ -3,6 +3,7 @@ package cl.duoc.pizza.ui
 import cl.duoc.pizza.modelo.Usuario
 import cl.duoc.pizza.servicio.InventarioServicio
 import cl.duoc.pizza.servicio.PedidoServicio
+import cl.duoc.pizza.servicio.RepartoServicio
 import cl.duoc.pizza.servicio.UsuarioServicio
 
 class MenuPrincipal(
@@ -10,6 +11,7 @@ class MenuPrincipal(
     private val usuarioServicio: UsuarioServicio,
     private val inventario: InventarioServicio,
     private val pedidoServicio: PedidoServicio,
+    private val reparto: RepartoServicio,
 ) {
 
     fun iniciar() {
@@ -54,7 +56,7 @@ class MenuPrincipal(
 
     private fun abrirSesion(usuario: Usuario) {
         if (usuario.esAdmin) {
-            MenuAdmin(consola, inventario, pedidoServicio).mostrar()
+            MenuAdmin(consola, inventario, pedidoServicio, reparto).mostrar()
         } else {
             MenuCliente(usuario, consola, inventario, pedidoServicio).mostrar()
         }
