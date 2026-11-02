@@ -5,6 +5,7 @@ import cl.duoc.pizza.modelo.EstadoPedido
 import cl.duoc.pizza.modelo.Pedido
 import cl.duoc.pizza.modelo.Producto
 import cl.duoc.pizza.repositorio.PedidoRepositorio
+import cl.duoc.pizza.util.Formato
 import java.time.LocalDate
 
 class PedidoServicio(
@@ -43,10 +44,19 @@ class PedidoServicio(
         pedido.quitar(producto, cantidad)
     }
 
-    /** Evalúa los ingredientes, los descuenta y deja el pedido en preparación. Si falta alguno, no descuenta nada. */
-    fun confirmar(pedido: Pedido) {
+    /**
+     * Evalúa los ingredientes, los descuenta y deja el pedido en preparación. Si falta alguno, no descuenta nada.
+     * Las [notas] en blanco se guardan como null.
+     */
+    fun confirmar(pedido: Pedido, notas: String? = null) {
         validarCarrito(pedido)
         if (pedido.estaVacio) throw ErrorNegocio("No se puede confirmar un pedido vacío")
+        val total: Int = try {
+            pedido.total
+        } catch (e: IllegalArgumentException) {
+            throw ErrorNegocio(e.message ?: "Costo de pedido no válido")
+        }
+        if (total <= 0) throw ErrorNegocio("Costo de pedido no válido (${Formato.precio(total)})")
 
         val faltantes: List<IngredienteFaltante> = inventario.evaluarDisponibilidad(pedido.cantidades)
         if (faltantes.isNotEmpty()) {
@@ -54,6 +64,7 @@ class PedidoServicio(
         }
 
         inventario.descontar(pedido.cantidades)
+        pedido.notas = notas?.trim()?.ifBlank { null }
         pedido.cambiarEstado(EstadoPedido.EN_PREPARACION)
     }
 

@@ -7,6 +7,7 @@ import cl.duoc.pizza.modelo.Producto
 import cl.duoc.pizza.modelo.Totales
 import cl.duoc.pizza.servicio.ErrorNegocio
 import cl.duoc.pizza.servicio.InventarioServicio
+import cl.duoc.pizza.servicio.Notificador
 import cl.duoc.pizza.servicio.PedidoServicio
 import cl.duoc.pizza.servicio.ResumenPedido
 import cl.duoc.pizza.util.Formato
@@ -111,10 +112,18 @@ class MenuCliente(
         if (pedido.estaVacio) throw ErrorNegocio("Tu pedido está vacío")
 
         verPedidoActual()
-        if (consola.confirmar("¿Confirmar el pedido?")) {
-            pedidoServicio.confirmar(pedido)
-            consola.exito("Pedido #${pedido.id} confirmado y ${pedido.estadoVisible.lowercase()}. ¡Gracias por tu compra!")
+        if (!consola.confirmar("¿Confirmar el pedido?")) return
+        val notas: String? = consola.leerOpcional("Notas para el pedido (Enter para omitir)")
+        try {
+            pedidoServicio.confirmar(pedido, notas)
+        } catch (e: ErrorNegocio) {
+            consola.error(e.message ?: "No se pudo confirmar el pedido")
+            consola.mensaje("Corrige tu pedido (opciones 2 y 3) y vuelve a confirmarlo.")
+            return
         }
+        consola.exito("Pedido #${pedido.id} confirmado. ¡Gracias por tu compra!")
+        consola.mensaje(ResumenPedido.generar(pedido))
+        Notificador.notificar(pedido)?.let { consola.mensaje(it) }
     }
 
     private fun verMisPedidos() {

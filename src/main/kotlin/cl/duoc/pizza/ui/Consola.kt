@@ -39,13 +39,25 @@ class Consola {
         }
     }
 
+    /** Lee un número; si el texto no es numérico o está fuera de rango, explica el error y vuelve a pedirlo. */
     fun leerEntero(etiqueta: String, minimo: Int, maximo: Int): Int {
         while (true) {
             print("$etiqueta: ")
-            val numero: Int? = leerLinea().trim().toIntOrNull()
-            if (numero != null && numero in minimo..maximo) return numero
-            error("Ingresa un número entre $minimo y $maximo")
+            val texto: String = leerLinea().trim()
+            try {
+                val numero: Int = texto.toInt()
+                if (numero in minimo..maximo) return numero
+                error("$numero está fuera de rango: ingresa un número entre $minimo y $maximo")
+            } catch (e: NumberFormatException) {
+                error("\"$texto\" no es un número válido: ingresa un número entre $minimo y $maximo")
+            }
         }
+    }
+
+    /** Lee un texto opcional: si se deja vacío devuelve null. */
+    fun leerOpcional(etiqueta: String): String? {
+        print("$etiqueta: ")
+        return leerLinea().trim().ifBlank { null }
     }
 
     fun confirmar(pregunta: String): Boolean {
@@ -67,12 +79,14 @@ class Consola {
         return leerEntero("Opción", 0, opciones.size)
     }
 
-    /** Ejecuta una acción y muestra los errores de negocio sin detener la app. */
+    /** Ejecuta una acción y muestra los errores de negocio o de datos sin detener la app. */
     fun intentar(accion: () -> Unit) {
         try {
             accion()
         } catch (e: ErrorNegocio) {
             error(e.message ?: "Error desconocido")
+        } catch (e: IllegalArgumentException) {
+            error("Dato no válido: ${e.message ?: "revisa lo ingresado"}")
         }
     }
 

@@ -73,6 +73,19 @@ class PedidoServicioTest {
     }
 
     @Test
+    fun `las notas en blanco quedan como null`() {
+        val pedido = servicio.pedidoActual(usuario)
+        servicio.agregarProducto(pedido, pizza, 1)
+        servicio.confirmar(pedido, "   ")
+        assertNull(pedido.notas)
+
+        val otro = servicio.pedidoActual(usuario)
+        servicio.agregarProducto(otro, bebida, 1)
+        servicio.confirmar(otro, "  Sin hielo ")
+        assertEquals("Sin hielo", otro.notas)
+    }
+
+    @Test
     fun `no confirma un pedido vacio`() {
         assertFailsWith<ErrorNegocio> { servicio.confirmar(servicio.pedidoActual(usuario)) }
     }

@@ -43,7 +43,9 @@ object ResumenPedido {
             appendLine(alinear("Descuento $PORCENTAJE_DESCUENTO% (más de $PIZZAS_PARA_DESCUENTO pizzas)", Formato.precio(-totales.descuento)))
         }
         appendLine(alinear("IVA $PORCENTAJE_IVA%", Formato.precio(totales.impuesto)))
-        append(alinear("TOTAL", Formato.precio(totales.total)))
+        appendLine(alinear("TOTAL", Formato.precio(totales.total)))
+        appendLine(linea)
+        append("Notas:     ${pedido.notas ?: "Sin notas"}")
     }
 
     /** Texto a la izquierda y monto a la derecha dentro del ancho del resumen. */

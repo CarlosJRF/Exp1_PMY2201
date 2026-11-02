@@ -2,6 +2,7 @@ package cl.duoc.pizza.modelo
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class TotalesTest {
 
@@ -25,6 +26,13 @@ class TotalesTest {
 
         assertEquals(3, pedido.cantidadPizzas)
         assertEquals(0, pedido.calcularTotal().descuento)
+    }
+
+    @Test
+    fun `un costo negativo no es valido`() {
+        val error = assertFailsWith<IllegalArgumentException> { calcularTotal(-100, 0) }
+        assertEquals("Costo de pedido no válido: el subtotal no puede ser negativo (-100)", error.message)
+        assertFailsWith<IllegalArgumentException> { calcularTotal(1000, -1) }
     }
 
     @Test

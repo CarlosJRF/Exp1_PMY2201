@@ -34,6 +34,7 @@ class ResumenPedidoTest {
         assertContains(resumen, "$3.796")
         assertContains(resumen, "$23.776")
         assertFalse(resumen.contains("Descuento"))
+        assertContains(resumen, "Notas:     Sin notas")
     }
 
     @Test
@@ -48,5 +49,14 @@ class ResumenPedidoTest {
         assertContains(resumen, "-$3.996")
         assertContains(resumen, "$6.833")
         assertContains(resumen, "$42.797")
+    }
+
+    @Test
+    fun `el resumen muestra las notas del cliente`() {
+        val pedido = Pedido(9, usuario)
+        pedido.agregar(margarita, 1)
+        pedido.notas = "Sin cebolla, tocar timbre"
+
+        assertContains(ResumenPedido.generar(pedido), "Notas:     Sin cebolla, tocar timbre")
     }
 }

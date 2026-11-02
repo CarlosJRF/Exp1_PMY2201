@@ -19,6 +19,9 @@ class Pedido(
     var estado: EstadoPedido? = null
         private set
 
+    /** Comentarios opcionales del cliente (por ejemplo, "sin cebolla"); null si no dejó notas. */
+    var notas: String? = null
+
     /** Repartidor asignado cuando el pedido sale en camino. */
     var repartidor: Repartidor? = null
 

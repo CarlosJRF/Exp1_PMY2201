@@ -9,8 +9,8 @@ class UsuarioServicio(private val repositorio: UsuarioRepositorio) {
 
     companion object {
         const val LARGO_MINIMO_PASSWORD = 6
-        const val EMAIL_PREDETERMINADO = "correo@invalido.com"
-        const val TELEFONO_PREDETERMINADO = "(000) 000-0000"
+        const val EMAIL_PREDETERMINADO = Cliente.EMAIL_PREDETERMINADO
+        const val TELEFONO_PREDETERMINADO = Cliente.TELEFONO_PREDETERMINADO
         private val FORMATO_EMAIL: Regex = Regex("^[\\w.+-]+@[\\w-]+(\\.[\\w-]+)+$")
         private val FORMATO_TELEFONO: Regex = Regex("^\\+?\\d{8,12}$")
     }

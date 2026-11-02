@@ -3,7 +3,9 @@ package cl.duoc.pizza.ui
 import cl.duoc.pizza.modelo.Pedido
 import cl.duoc.pizza.modelo.Repartidor
 import cl.duoc.pizza.modelo.Usuario
+import cl.duoc.pizza.servicio.ErrorNegocio
 import cl.duoc.pizza.servicio.InventarioServicio
+import cl.duoc.pizza.servicio.Notificador
 import cl.duoc.pizza.servicio.PedidoServicio
 import cl.duoc.pizza.servicio.RepartoServicio
 import cl.duoc.pizza.servicio.ReporteDiario
@@ -67,10 +69,16 @@ class MenuAdmin(
         val numero: Int = consola.leerEntero("Número del ingrediente (0 para volver)", 0, nombres.size)
         if (numero == 0) return
         val ingrediente: String = nombres[numero - 1]
-        val cantidad: Int = consola.leerEntero("Cantidad a agregar", 1, REPOSICION_MAXIMA)
-
-        inventario.reponer(ingrediente, cantidad)
-        consola.exito("Stock de $ingrediente: ${inventario.stockDe(ingrediente)}")
+        while (true) {
+            val cantidad: Int = consola.leerEntero("Cantidad a agregar", -REPOSICION_MAXIMA, REPOSICION_MAXIMA)
+            try {
+                inventario.reponer(ingrediente, cantidad)
+                consola.exito("Stock de $ingrediente: ${inventario.stockDe(ingrediente)}")
+                return
+            } catch (e: ErrorNegocio) {
+                consola.error("${e.message}. Ingresa una cantidad entre 1 y $REPOSICION_MAXIMA.")
+            }
+        }
     }
 
     private fun verPedidos() {
@@ -92,6 +100,7 @@ class MenuAdmin(
         val pedido: Pedido = elegirPedido() ?: return
         pedidoServicio.marcarListo(pedido)
         consola.exito("Pedido #${pedido.id}: ${pedido.estadoVisible}")
+        notificar(pedido)
     }
 
     private fun asignarRepartidor() {
@@ -100,12 +109,14 @@ class MenuAdmin(
         val pedido: Pedido = elegirPedido() ?: return
         val repartidor: Repartidor = reparto.asignar(pedido)
         consola.exito("Pedido #${pedido.id} asignado a ${repartidor.nombre} (${repartidor.distanciaKm} km): ${pedido.estadoVisible}")
+        notificar(pedido)
     }
 
     private fun registrarEntrega() {
         val pedido: Pedido = elegirPedido() ?: return
         val repartidor: Repartidor = reparto.entregar(pedido)
         consola.exito("Pedido #${pedido.id} entregado por ${repartidor.nombre}, que queda disponible")
+        notificar(pedido)
     }
 
     /** Lista clientes, administradores y repartidores; cada uno se describe a su manera (polimorfismo). */
@@ -115,6 +126,11 @@ class MenuAdmin(
         for (persona in personas) {
             consola.mensaje(persona.descripcion())
         }
+    }
+
+    /** Muestra la notificación solo si el cliente tiene un email válido. */
+    private fun notificar(pedido: Pedido) {
+        Notificador.notificar(pedido)?.let { consola.mensaje(it) }
     }
 
     /** Muestra los pedidos y devuelve el elegido, o null si el usuario vuelve. */

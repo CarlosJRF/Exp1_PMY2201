@@ -19,6 +19,8 @@ data class Totales(
  * y luego el IVA (19 %) sobre el monto ya descontado.
  */
 fun calcularTotal(subtotal: Int, cantidadPizzas: Int): Totales {
+    require(subtotal >= 0) { "Costo de pedido no válido: el subtotal no puede ser negativo ($subtotal)" }
+    require(cantidadPizzas >= 0) { "La cantidad de pizzas no puede ser negativa ($cantidadPizzas)" }
     val descuento: Int = if (cantidadPizzas > PIZZAS_PARA_DESCUENTO) porcentajeDe(subtotal, PORCENTAJE_DESCUENTO) else 0
     val neto: Int = subtotal - descuento
     val impuesto: Int = porcentajeDe(neto, PORCENTAJE_IVA)

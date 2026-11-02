@@ -76,6 +76,9 @@ class InventarioServicioTest {
         inventario.reponer("Agua", 10)
         assertEquals(10, inventario.stockDe("Agua"))
         assertFailsWith<ErrorNegocio> { inventario.reponer("Agua", 0) }
+        val negativa = assertFailsWith<ErrorNegocio> { inventario.reponer("Agua", -3) }
+        assertContains(negativa.message!!, "no puede ser negativa (-3)")
+        assertEquals(10, inventario.stockDe("Agua"))
         assertFailsWith<ErrorNegocio> { inventario.reponer("Harina", 5) }
     }
 

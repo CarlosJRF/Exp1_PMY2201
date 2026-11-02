@@ -35,5 +35,6 @@ object Vistas {
     fun lineaPedido(pedido: Pedido): String =
         "#${pedido.id}  ${Formato.fecha(pedido.fecha)}  ${pedido.cliente.email.padEnd(24)} " +
             "${Formato.precio(pedido.total).padStart(9)}  ${pedido.estadoVisible}" +
+            (pedido.repartidor?.let { " · ${it.nombre}" } ?: "") +
             if (pedido.entregado) " (entregado)" else ""
 }

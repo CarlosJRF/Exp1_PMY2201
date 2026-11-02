@@ -137,7 +137,8 @@ class InventarioServicio(
     }
 
     fun reponer(ingrediente: String, cantidad: Int) {
-        if (cantidad <= 0) throw ErrorNegocio("La cantidad debe ser mayor a 0")
+        if (cantidad < 0) throw ErrorNegocio("La cantidad no puede ser negativa ($cantidad): el inventario solo se repone")
+        if (cantidad == 0) throw ErrorNegocio("La cantidad debe ser mayor a 0")
         if (ingrediente !in ingredientes()) throw ErrorNegocio("No existe el ingrediente $ingrediente")
         stockRepositorio.actualizar(ingrediente, stockDe(ingrediente) + cantidad)
     }
