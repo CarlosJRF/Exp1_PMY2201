@@ -5,17 +5,25 @@ pensado para evolucionar más adelante a una app móvil.
 
 ## Funcionalidades
 
-- Registro de usuarios e inicio de sesión (contraseñas guardadas con hash SHA-256).
-- Catálogo de pizzas (3 tamaños), bebidas y acompañamientos.
-- Pedidos: agregar y quitar productos, confirmar y cancelar.
-- Control de stock: se valida al agregar, se descuenta al confirmar y se devuelve al cancelar,
-  con mensajes claros de disponibilidad (agotado, stock bajo, cuántas unidades quedan).
-- Descuentos automáticos (no acumulables, se aplica el mayor):
-  - 3 o más pizzas en el pedido: **15 %**.
-  - Compras desde **$30.000**: **10 %**.
-- Resumen de pedido con datos del cliente, detalle de productos (cantidad, precio unitario y subtotal),
-  subtotal, descuento aplicado, total y estado.
-- Menú de administrador: inventario con aviso de stock bajo, reposición y listado de pedidos.
+- **Clientes:** registro e inicio de sesión (contraseñas con hash SHA-256). Si el email o el teléfono
+  no tienen un formato válido se registran con valores predeterminados (`correo@invalido.com`,
+  `(000) 000-0000`) y se avisa al usuario.
+- **Catálogo:** pizzas en 3 tamaños, bebidas y acompañamientos; cada producto puede describirse
+  con su precio e ingredientes.
+- **Inventario por ingredientes:** antes de aceptar un pedido se revisa cada ingrediente; si falta
+  alguno se indica cuál es insuficiente y los pasos para reabastecerlo. Al confirmar, cada producto
+  se prepara como un lote que descuenta sus ingredientes.
+- **Pedidos:** carrito (agregar, quitar, notas opcionales), confirmación y cancelación.
+  Estados: **En preparación → Listo → En camino**.
+- **Totales:** 10 % de descuento si el pedido tiene **más de 3 pizzas** e **IVA 19 %** sobre el monto descontado.
+- **Repartidores:** se asigna el repartidor disponible más cercano; al registrar la entrega
+  vuelve a quedar disponible.
+- **Notificaciones** en consola al cliente (solo si tiene un email válido) cuando cambia su pedido.
+- **Resumen del pedido:** datos del cliente, productos (nombre, precio, cantidad), subtotal,
+  descuento, IVA, total, estado y notas. Se muestra como confirmación al cliente.
+- **Administrador:** inventario de ingredientes con aviso de stock bajo, reposición, listado de pedidos,
+  reporte del día (completados y pendientes), cambio de estado, asignación de repartidor,
+  registro de entrega y listado de usuarios y repartidores.
 
 Los datos se guardan **en memoria**: al cerrar la aplicación se pierden.
 
@@ -57,9 +65,9 @@ git ls-files --cached --others --exclude-standard | zip -@ DuocPizza.zip
 ```
 src/main/kotlin/cl/duoc/pizza/
 ├── Main.kt          # arma las dependencias e inicia la app
-├── modelo/          # Usuario, Producto, Pedido, ItemPedido, Descuento y enums
+├── modelo/          # Usuario (Cliente, Repartidor, Administrador), Producto, Pedido, Totales y enums
 ├── repositorio/     # almacenamiento en memoria y datos iniciales
-├── servicio/        # reglas de negocio (usuarios, inventario, pedidos, resumen)
+├── servicio/        # reglas de negocio (usuarios, inventario, pedidos, reparto, resumen, reporte)
 ├── ui/              # menús y lectura por consola
 └── util/            # hash SHA-256 y formato de precios/fechas
 ```
