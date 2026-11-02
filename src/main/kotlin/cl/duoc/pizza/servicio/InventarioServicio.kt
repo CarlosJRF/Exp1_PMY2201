@@ -1,16 +1,18 @@
 package cl.duoc.pizza.servicio
 
+import cl.duoc.pizza.modelo.ItemPedido
 import cl.duoc.pizza.modelo.Producto
 import cl.duoc.pizza.repositorio.ProductoRepositorio
 import cl.duoc.pizza.repositorio.StockRepositorio
 
+/** Inventario por ingredientes: los productos se pueden vender mientras alcancen sus ingredientes. */
 class InventarioServicio(
     private val productoRepositorio: ProductoRepositorio,
     private val stockRepositorio: StockRepositorio,
 ) {
 
     companion object {
-        const val UMBRAL_STOCK_BAJO = 3
+        const val UMBRAL_STOCK_BAJO = 5
     }
 
     fun catalogo(): List<Producto> = productoRepositorio.listar()
@@ -18,45 +20,103 @@ class InventarioServicio(
     fun buscarProducto(id: Int): Producto =
         productoRepositorio.buscarPorId(id) ?: throw ErrorNegocio("No existe un producto con id $id")
 
-    fun stockDe(producto: Producto): Int = stockRepositorio.obtener(producto.id)
+    /** Ingredientes del inventario con su cantidad disponible. */
+    fun ingredientes(): Map<String, Int> = stockRepositorio.listar()
 
-    fun hayStock(producto: Producto, cantidad: Int): Boolean = stockDe(producto) >= cantidad
+    fun stockDe(ingrediente: String): Int = stockRepositorio.obtener(ingrediente)
 
-    fun tieneStockBajo(producto: Producto): Boolean = stockDe(producto) <= UMBRAL_STOCK_BAJO
+    fun ingredientesConStockBajo(): List<String> =
+        ingredientes().filter { it.value <= UMBRAL_STOCK_BAJO }.keys.toList()
 
-    fun productosConStockBajo(): List<Producto> = catalogo().filter { tieneStockBajo(it) }
+    /** Total de cada ingrediente que necesitan los items. */
+    fun necesarios(items: List<ItemPedido>): Map<String, Int> {
+        val total: MutableMap<String, Int> = mutableMapOf()
+        for (item in items) {
+            for ((ingrediente, porUnidad) in item.producto.ingredientes) {
+                total[ingrediente] = (total[ingrediente] ?: 0) + porUnidad * item.cantidad
+            }
+        }
+        return total
+    }
 
-    /** Texto de disponibilidad para mostrar al usuario: agotado, stock bajo o unidades disponibles. */
+    /** Unidades del producto que se pueden preparar con el stock, sin contar lo [reservado] por otros items. */
+    fun unidadesDisponibles(producto: Producto, reservado: Map<String, Int> = emptyMap()): Int =
+        producto.ingredientes.minOf { (ingrediente, porUnidad) ->
+            maxOf(0, stockDe(ingrediente) - (reservado[ingrediente] ?: 0)) / porUnidad
+        }
+
+    fun hayStock(producto: Producto, cantidad: Int): Boolean = unidadesDisponibles(producto) >= cantidad
+
+    fun tieneStockBajo(producto: Producto): Boolean = unidadesDisponibles(producto) <= UMBRAL_STOCK_BAJO
+
+    /** Texto de disponibilidad para el catálogo: agotado, stock bajo o unidades que se pueden preparar. */
     fun disponibilidad(producto: Producto): String {
-        val stock: Int = stockDe(producto)
+        val unidades: Int = unidadesDisponibles(producto)
         return when {
-            stock == 0 -> "AGOTADO"
-            tieneStockBajo(producto) -> "¡Quedan $stock!"
-            else -> "stock: $stock"
+            unidades == 0 -> "AGOTADO"
+            unidades <= UMBRAL_STOCK_BAJO -> "¡Quedan $unidades!"
+            else -> "stock: $unidades"
         }
     }
 
-    /** Mensaje claro cuando no alcanzan las unidades: distingue un producto agotado de uno con poco stock. */
-    fun mensajeFaltaStock(producto: Producto, disponible: Int = stockDe(producto)): String =
-        if (disponible <= 0) {
-            "${producto.nombreCompleto} está agotado"
-        } else {
-            "Stock insuficiente de ${producto.nombreCompleto}: solo hay $disponible disponible(s)"
+    fun nivelDe(ingrediente: String, necesario: Int): NivelIngrediente {
+        val disponible: Int = stockDe(ingrediente)
+        return when {
+            disponible == 0 -> NivelIngrediente.AGOTADO
+            disponible < necesario -> NivelIngrediente.INSUFICIENTE
+            else -> NivelIngrediente.SUFICIENTE
         }
-
-    fun descontar(producto: Producto, cantidad: Int) {
-        validarCantidad(cantidad)
-        val disponible: Int = stockDe(producto)
-        if (disponible < cantidad) throw ErrorNegocio(mensajeFaltaStock(producto, disponible))
-        stockRepositorio.actualizar(producto.id, disponible - cantidad)
     }
 
-    fun reponer(producto: Producto, cantidad: Int) {
-        validarCantidad(cantidad)
-        stockRepositorio.actualizar(producto.id, stockDe(producto) + cantidad)
+    /** Revisa cada ingrediente que necesitan los items y devuelve los que no alcanzan (vacío si alcanza todo). */
+    fun evaluarDisponibilidad(items: List<ItemPedido>): List<IngredienteFaltante> {
+        val faltantes: MutableList<IngredienteFaltante> = mutableListOf()
+        for ((ingrediente, necesario) in necesarios(items)) {
+            when (val nivel: NivelIngrediente = nivelDe(ingrediente, necesario)) {
+                NivelIngrediente.SUFICIENTE -> continue
+                NivelIngrediente.INSUFICIENTE, NivelIngrediente.AGOTADO ->
+                    faltantes.add(IngredienteFaltante(ingrediente, necesario, stockDe(ingrediente), nivel))
+            }
+        }
+        return faltantes
     }
 
-    private fun validarCantidad(cantidad: Int) {
+    /** Mensaje con los ingredientes insuficientes y los pasos para reabastecerlos. */
+    fun mensajeFaltantes(faltantes: List<IngredienteFaltante>): String = buildString {
+        appendLine("Ingredientes insuficientes:")
+        for (faltante in faltantes) {
+            val detalle: String = when (faltante.nivel) {
+                NivelIngrediente.AGOTADO -> "agotado (se necesitan ${faltante.necesario})"
+                else -> "hay ${faltante.disponible}, se necesitan ${faltante.necesario} (faltan ${faltante.faltan})"
+            }
+            appendLine("  - ${faltante.nombre}: $detalle")
+        }
+        appendLine("Pasos para reabastecer:")
+        appendLine("  1. Iniciar sesión como administrador.")
+        appendLine("  2. Elegir \"Reponer ingrediente\" en el menú.")
+        appendLine("  3. Reponer al menos: ${faltantes.joinToString { "${it.nombre} (${it.faltan})" }}.")
+        append("  4. Volver a intentar el pedido.")
+    }
+
+    /** Descuenta los ingredientes de los items. Si falta alguno, no descuenta nada. */
+    fun descontar(items: List<ItemPedido>) {
+        val faltantes: List<IngredienteFaltante> = evaluarDisponibilidad(items)
+        if (faltantes.isNotEmpty()) throw ErrorNegocio(mensajeFaltantes(faltantes))
+        for ((ingrediente, necesario) in necesarios(items)) {
+            stockRepositorio.actualizar(ingrediente, stockDe(ingrediente) - necesario)
+        }
+    }
+
+    /** Devuelve al inventario los ingredientes de los items (por ejemplo, al cancelar un pedido). */
+    fun devolver(items: List<ItemPedido>) {
+        for ((ingrediente, cantidad) in necesarios(items)) {
+            stockRepositorio.actualizar(ingrediente, stockDe(ingrediente) + cantidad)
+        }
+    }
+
+    fun reponer(ingrediente: String, cantidad: Int) {
         if (cantidad <= 0) throw ErrorNegocio("La cantidad debe ser mayor a 0")
+        if (ingrediente !in ingredientes()) throw ErrorNegocio("No existe el ingrediente $ingrediente")
+        stockRepositorio.actualizar(ingrediente, stockDe(ingrediente) + cantidad)
     }
 }

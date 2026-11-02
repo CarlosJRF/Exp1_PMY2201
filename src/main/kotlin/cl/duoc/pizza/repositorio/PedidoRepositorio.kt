@@ -15,6 +15,10 @@ class PedidoRepositorio {
 
     fun buscarPorId(id: Int): Pedido? = pedidos[id]
 
+    fun eliminar(id: Int) {
+        pedidos.remove(id)
+    }
+
     fun listarPorUsuario(idUsuario: Int): List<Pedido> =
         listar().filter { it.usuario.id == idUsuario }
 

@@ -14,7 +14,7 @@ object ResumenPedido {
     fun generar(pedido: Pedido): String = buildString {
         val linea: String = "-".repeat(ANCHO)
         appendLine(linea)
-        appendLine("Pedido #${pedido.id}  (${pedido.estado.nombreVisible})")
+        appendLine("Pedido #${pedido.id}  (${pedido.estadoVisible})")
         appendLine("Fecha:     ${Formato.fecha(pedido.fecha)}")
         appendLine(linea)
         appendLine("CLIENTE")

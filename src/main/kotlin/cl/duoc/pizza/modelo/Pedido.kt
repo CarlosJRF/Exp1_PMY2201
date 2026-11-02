@@ -3,7 +3,7 @@ package cl.duoc.pizza.modelo
 import java.time.LocalDateTime
 
 /**
- * Pedido de un usuario. Mientras está PENDIENTE funciona como carrito;
+ * Pedido de un usuario. Mientras [estado] es null funciona como carrito;
  * la validación de stock y los cambios de estado los hace PedidoServicio.
  */
 class Pedido(
@@ -15,7 +15,10 @@ class Pedido(
     val items: List<ItemPedido>
         get() = _items.toList()
 
-    var estado: EstadoPedido = EstadoPedido.PENDIENTE
+    var estado: EstadoPedido? = null
+
+    val estadoVisible: String
+        get() = estado?.nombreVisible ?: "En carrito"
 
     /** Suma de los subtotales, antes de descuentos. */
     val subtotal: Int

@@ -3,6 +3,7 @@ package cl.duoc.pizza.servicio
 import cl.duoc.pizza.repositorio.DatosIniciales
 import cl.duoc.pizza.repositorio.UsuarioRepositorio
 import kotlin.test.Test
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotEquals
@@ -37,12 +38,20 @@ class UsuarioServicioTest {
     }
 
     @Test
-    fun `valida los campos del registro`() {
+    fun `valida los campos obligatorios del registro`() {
         assertFailsWith<ErrorNegocio> { registrarAna(nombre = " ") }
-        assertFailsWith<ErrorNegocio> { registrarAna(email = "ana-sin-arroba") }
         assertFailsWith<ErrorNegocio> { registrarAna(password = "123") }
-        assertFailsWith<ErrorNegocio> { registrarAna(telefono = "abc") }
         assertFailsWith<ErrorNegocio> { registrarAna(direccion = "") }
+    }
+
+    @Test
+    fun `email y telefono invalidos se reemplazan por valores predeterminados`() {
+        val ana = registrarAna(email = "ana-sin-arroba", telefono = "abc")
+        assertEquals(UsuarioServicio.EMAIL_PREDETERMINADO, ana.email)
+        assertEquals(UsuarioServicio.TELEFONO_PREDETERMINADO, ana.telefono)
+
+        val error = assertFailsWith<ErrorNegocio> { registrarAna(email = "otro-invalido") }
+        assertContains(error.message!!, "ingresa un email correcto")
     }
 
     @Test

@@ -113,7 +113,7 @@ class MenuCliente(
         verPedidoActual()
         if (consola.confirmar("¿Confirmar el pedido?")) {
             pedidoServicio.confirmar(pedido)
-            consola.exito("Pedido #${pedido.id} confirmado. ¡Gracias por tu compra!")
+            consola.exito("Pedido #${pedido.id} confirmado y ${pedido.estadoVisible.lowercase()}. ¡Gracias por tu compra!")
         }
     }
 
@@ -129,7 +129,7 @@ class MenuCliente(
 
     private fun cancelarPedido() {
         val cancelables: List<Pedido> = pedidoServicio.pedidosDe(usuario)
-            .filter { !it.estaVacio && it.estado != EstadoPedido.CANCELADO }
+            .filter { (it.estado == null && !it.estaVacio) || it.estado == EstadoPedido.EN_PREPARACION }
         if (cancelables.isEmpty()) throw ErrorNegocio("No tienes pedidos para cancelar")
 
         consola.titulo("Cancelar pedido")

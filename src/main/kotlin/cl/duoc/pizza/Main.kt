@@ -16,7 +16,7 @@ fun main() {
     // Repositorios (datos en memoria)
     val usuarioRepositorio: UsuarioRepositorio = UsuarioRepositorio(listOf(DatosIniciales.admin))
     val productoRepositorio: ProductoRepositorio = ProductoRepositorio(DatosIniciales.productos)
-    val stockRepositorio: StockRepositorio = StockRepositorio(DatosIniciales.stock)
+    val stockRepositorio: StockRepositorio = StockRepositorio(DatosIniciales.ingredientes)
     val pedidoRepositorio: PedidoRepositorio = PedidoRepositorio()
 
     // Servicios (reglas de negocio)

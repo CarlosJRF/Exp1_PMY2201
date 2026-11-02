@@ -1,10 +1,12 @@
 package cl.duoc.pizza.util
 
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 object Formato {
     private val FORMATO_FECHA: DateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")
+    private val FORMATO_DIA: DateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
 
     /** Formatea un monto en pesos chilenos: 12990 -> "$12.990". */
     fun precio(monto: Int): String {
@@ -14,4 +16,6 @@ object Formato {
     }
 
     fun fecha(fecha: LocalDateTime): String = fecha.format(FORMATO_FECHA)
+
+    fun dia(fecha: LocalDate): String = fecha.format(FORMATO_DIA)
 }

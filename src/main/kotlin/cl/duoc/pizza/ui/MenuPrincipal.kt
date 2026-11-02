@@ -33,6 +33,12 @@ class MenuPrincipal(
             direccion = consola.leerTexto("Dirección"),
         )
         consola.exito("Usuario registrado. ¡Hola, ${usuario.nombre}!")
+        if (usuario.email == UsuarioServicio.EMAIL_PREDETERMINADO) {
+            consola.error("El email no era válido: se registró como ${usuario.email} (úsalo para iniciar sesión)")
+        }
+        if (usuario.telefono == UsuarioServicio.TELEFONO_PREDETERMINADO) {
+            consola.error("El teléfono no era válido: se registró como ${usuario.telefono}")
+        }
         abrirSesion(usuario)
     }
 

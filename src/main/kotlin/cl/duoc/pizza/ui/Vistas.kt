@@ -20,6 +20,12 @@ object Vistas {
         }
     }.trimEnd()
 
+    /** Ingredientes numerados con su cantidad disponible. */
+    fun ingredientes(inventario: InventarioServicio): String =
+        inventario.ingredientes().entries.withIndex().joinToString("\n") { (indice, entrada) ->
+            "${(indice + 1).toString().padStart(2)}. ${entrada.key.padEnd(20)} ${entrada.value.toString().padStart(4)}"
+        }
+
     /** Explica las reglas de descuento vigentes (ver [Descuento]). */
     fun promociones(): String =
         "Promociones (no acumulables): ${Descuento.PIZZAS_MINIMAS} o más pizzas = ${Descuento.PORCENTAJE_POR_PIZZAS}% dcto. · " +
@@ -27,5 +33,5 @@ object Vistas {
 
     fun lineaPedido(pedido: Pedido): String =
         "#${pedido.id}  ${Formato.fecha(pedido.fecha)}  ${pedido.usuario.email.padEnd(24)} " +
-            "${Formato.precio(pedido.total).padStart(9)}  ${pedido.estado.nombreVisible}"
+            "${Formato.precio(pedido.total).padStart(9)}  ${pedido.estadoVisible}"
 }

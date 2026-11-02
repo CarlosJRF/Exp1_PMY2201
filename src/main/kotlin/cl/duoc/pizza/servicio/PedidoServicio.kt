@@ -6,73 +6,77 @@ import cl.duoc.pizza.modelo.Pedido
 import cl.duoc.pizza.modelo.Producto
 import cl.duoc.pizza.modelo.Usuario
 import cl.duoc.pizza.repositorio.PedidoRepositorio
+import java.time.LocalDate
 
 class PedidoServicio(
     private val pedidoRepositorio: PedidoRepositorio,
     private val inventario: InventarioServicio,
 ) {
 
-    /** Devuelve el pedido pendiente (carrito) del usuario, o crea uno nuevo si no tiene. */
+    /** Devuelve el carrito (pedido sin confirmar) del usuario, o crea uno nuevo si no tiene. */
     fun pedidoActual(usuario: Usuario): Pedido =
-        pedidosDe(usuario).find { it.estado == EstadoPedido.PENDIENTE }
+        pedidosDe(usuario).find { it.estado == null }
             ?: Pedido(pedidoRepositorio.siguienteId(), usuario).also { pedidoRepositorio.guardar(it) }
 
-    /** Unidades que todavía se pueden agregar: el stock menos lo que ya está en el pedido. */
+    /** Unidades que todavía se pueden agregar: lo que alcanza con los ingredientes que no usa ya el pedido. */
     fun disponibleParaAgregar(pedido: Pedido, producto: Producto): Int =
-        maxOf(0, inventario.stockDe(producto) - pedido.cantidadDe(producto))
+        inventario.unidadesDisponibles(producto, inventario.necesarios(pedido.items))
 
-    /** Lanza ErrorNegocio con un mensaje claro si no se pueden agregar [cantidad] unidades al pedido. */
+    /** Lanza ErrorNegocio con los ingredientes insuficientes si no se pueden agregar [cantidad] unidades. */
     fun verificarDisponibilidad(pedido: Pedido, producto: Producto, cantidad: Int) {
-        val disponible: Int = disponibleParaAgregar(pedido, producto)
-        if (cantidad <= disponible) return
-        val mensaje: String = when {
-            inventario.stockDe(producto) == 0 -> inventario.mensajeFaltaStock(producto)
-            disponible == 0 ->
-                "Ya tienes en tu pedido todo el stock de ${producto.nombreCompleto} (${pedido.cantidadDe(producto)})"
-            else -> "Stock insuficiente de ${producto.nombreCompleto}: puedes agregar hasta $disponible más"
-        }
-        throw ErrorNegocio(mensaje)
+        if (cantidad <= disponibleParaAgregar(pedido, producto)) return
+        val faltantes: List<IngredienteFaltante> =
+            inventario.evaluarDisponibilidad(pedido.items + ItemPedido(producto, cantidad))
+        throw ErrorNegocio("No se puede agregar $cantidad x ${producto.nombreCompleto}.\n${inventario.mensajeFaltantes(faltantes)}")
     }
 
     fun agregarProducto(pedido: Pedido, producto: Producto, cantidad: Int) {
-        validarPendiente(pedido)
+        validarCarrito(pedido)
         if (cantidad <= 0) throw ErrorNegocio("La cantidad debe ser mayor a 0")
         verificarDisponibilidad(pedido, producto, cantidad)
         pedido.agregar(producto, cantidad)
     }
 
     fun quitarProducto(pedido: Pedido, producto: Producto, cantidad: Int) {
-        validarPendiente(pedido)
+        validarCarrito(pedido)
         if (cantidad <= 0) throw ErrorNegocio("La cantidad debe ser mayor a 0")
         if (pedido.cantidadDe(producto) == 0) throw ErrorNegocio("El producto no está en el pedido")
         pedido.quitar(producto, cantidad)
     }
 
-    /** Confirma el pedido y descuenta el stock. Si falta stock de algún producto, no descuenta nada. */
+    /** Evalúa los ingredientes, los descuenta y deja el pedido en preparación. Si falta alguno, no descuenta nada. */
     fun confirmar(pedido: Pedido) {
-        validarPendiente(pedido)
+        validarCarrito(pedido)
         if (pedido.estaVacio) throw ErrorNegocio("No se puede confirmar un pedido vacío")
 
-        val sinStock: List<ItemPedido> = pedido.items.filter { !inventario.hayStock(it.producto, it.cantidad) }
-        if (sinStock.isNotEmpty()) {
-            val detalle: String = sinStock.joinToString("; ") {
-                "${it.producto.nombreCompleto} (pides ${it.cantidad}, hay ${inventario.stockDe(it.producto)})"
-            }
-            throw ErrorNegocio("No se pudo confirmar, falta stock de: $detalle")
+        val faltantes: List<IngredienteFaltante> = inventario.evaluarDisponibilidad(pedido.items)
+        if (faltantes.isNotEmpty()) {
+            throw ErrorNegocio("No se pudo confirmar el pedido #${pedido.id}.\n${inventario.mensajeFaltantes(faltantes)}")
         }
 
-        pedido.items.forEach { inventario.descontar(it.producto, it.cantidad) }
-        pedido.estado = EstadoPedido.CONFIRMADO
+        inventario.descontar(pedido.items)
+        pedido.estado = EstadoPedido.EN_PREPARACION
     }
 
-    /** Cancela el pedido; si ya estaba confirmado, devuelve el stock. */
+    /** Pasa el pedido al siguiente estado: En preparación -> Listo -> En camino. */
+    fun avanzarEstado(pedido: Pedido) {
+        pedido.estado = when (pedido.estado) {
+            null -> throw ErrorNegocio("El pedido #${pedido.id} aún no está confirmado")
+            EstadoPedido.EN_PREPARACION -> EstadoPedido.LISTO
+            EstadoPedido.LISTO -> EstadoPedido.EN_CAMINO
+            EstadoPedido.EN_CAMINO -> throw ErrorNegocio("El pedido #${pedido.id} ya está en camino")
+        }
+    }
+
+    /** Elimina el pedido; si estaba en preparación, devuelve los ingredientes al inventario. */
     fun cancelar(pedido: Pedido) {
         when (pedido.estado) {
-            EstadoPedido.CANCELADO -> throw ErrorNegocio("El pedido ya está cancelado")
-            EstadoPedido.CONFIRMADO -> pedido.items.forEach { inventario.reponer(it.producto, it.cantidad) }
-            EstadoPedido.PENDIENTE -> Unit
+            null -> Unit
+            EstadoPedido.EN_PREPARACION -> inventario.devolver(pedido.items)
+            EstadoPedido.LISTO, EstadoPedido.EN_CAMINO ->
+                throw ErrorNegocio("El pedido #${pedido.id} ya está ${pedido.estadoVisible.lowercase()} y no se puede cancelar")
         }
-        pedido.estado = EstadoPedido.CANCELADO
+        pedidoRepositorio.eliminar(pedido.id)
     }
 
     fun buscarPedido(id: Int): Pedido =
@@ -80,12 +84,16 @@ class PedidoServicio(
 
     fun pedidosDe(usuario: Usuario): List<Pedido> = pedidoRepositorio.listarPorUsuario(usuario.id)
 
-    /** Todos los pedidos, sin carritos vacíos. */
-    fun todosLosPedidos(): List<Pedido> = pedidoRepositorio.listar().filter { !it.estaVacio }
+    /** Todos los pedidos confirmados (sin carritos). */
+    fun todosLosPedidos(): List<Pedido> = pedidoRepositorio.listar().filter { it.estado != null }
 
-    private fun validarPendiente(pedido: Pedido) {
-        if (pedido.estado != EstadoPedido.PENDIENTE) {
-            throw ErrorNegocio("El pedido #${pedido.id} ya está ${pedido.estado.nombreVisible.lowercase()}")
+    /** Pedidos confirmados en la fecha indicada, como arreglo para el reporte diario. */
+    fun pedidosDelDia(fecha: LocalDate = LocalDate.now()): Array<Pedido> =
+        todosLosPedidos().filter { it.fecha.toLocalDate() == fecha }.toTypedArray()
+
+    private fun validarCarrito(pedido: Pedido) {
+        if (pedido.estado != null) {
+            throw ErrorNegocio("El pedido #${pedido.id} ya está confirmado (${pedido.estadoVisible.lowercase()})")
         }
     }
 }

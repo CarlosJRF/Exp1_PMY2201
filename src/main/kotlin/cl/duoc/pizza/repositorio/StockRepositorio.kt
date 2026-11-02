@@ -1,19 +1,19 @@
 package cl.duoc.pizza.repositorio
 
-/** Unidades disponibles por id de producto. Las reglas de negocio están en InventarioServicio. */
-class StockRepositorio(stockInicial: Map<Int, Int> = emptyMap()) {
-    private val stock: MutableMap<Int, Int> = stockInicial.toMutableMap()
+/** Cantidad disponible por nombre de ingrediente. Las reglas de negocio están en InventarioServicio. */
+class StockRepositorio(stockInicial: Map<String, Int> = emptyMap()) {
+    private val stock: MutableMap<String, Int> = stockInicial.toMutableMap()
 
     init {
         require(stock.values.all { it >= 0 }) { "El stock inicial no puede ser negativo" }
     }
 
-    fun obtener(idProducto: Int): Int = stock[idProducto] ?: 0
+    fun obtener(ingrediente: String): Int = stock[ingrediente] ?: 0
 
-    fun actualizar(idProducto: Int, cantidad: Int) {
+    fun actualizar(ingrediente: String, cantidad: Int) {
         require(cantidad >= 0) { "El stock no puede ser negativo" }
-        stock[idProducto] = cantidad
+        stock[ingrediente] = cantidad
     }
 
-    fun listar(): Map<Int, Int> = stock.toMap()
+    fun listar(): Map<String, Int> = stock.toMap()
 }

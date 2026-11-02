@@ -21,7 +21,7 @@ class ResumenPedidoTest {
 
         val resumen = ResumenPedido.generar(pedido)
 
-        assertContains(resumen, "Pedido #7  (Pendiente)")
+        assertContains(resumen, "Pedido #7  (En carrito)")
         assertContains(resumen, "25-10-2026 20:30")
         assertContains(resumen, "Nombre:    Ana")
         assertContains(resumen, "Email:     ana@duoc.cl")

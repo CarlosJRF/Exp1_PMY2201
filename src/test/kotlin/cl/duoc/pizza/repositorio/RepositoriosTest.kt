@@ -2,6 +2,7 @@ package cl.duoc.pizza.repositorio
 
 import cl.duoc.pizza.modelo.Categoria
 import cl.duoc.pizza.modelo.Pedido
+import cl.duoc.pizza.modelo.Tamano
 import cl.duoc.pizza.modelo.Usuario
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -39,18 +40,24 @@ class RepositoriosTest {
     }
 
     @Test
-    fun `cada producto del catalogo tiene stock inicial`() {
-        val stock = StockRepositorio(DatosIniciales.stock)
-        DatosIniciales.productos.forEach { assertTrue(stock.obtener(it.id) > 0) }
+    fun `cada ingrediente del catalogo tiene stock inicial`() {
+        val stock = StockRepositorio(DatosIniciales.ingredientes)
+        DatosIniciales.productos.flatMap { it.ingredientes.keys }.forEach { assertTrue(stock.obtener(it) > 0, it) }
+    }
+
+    @Test
+    fun `los ingredientes de la pizza escalan con el tamano`() {
+        val familiar = DatosIniciales.productos.first { it.nombre == "Margarita" && it.tamano == Tamano.FAMILIAR }
+        assertEquals(3, familiar.ingredientes["Masa"])
     }
 
     @Test
     fun `stock no acepta cantidades negativas`() {
-        val stock = StockRepositorio(mapOf(1 to 5))
-        stock.actualizar(1, 0)
-        assertEquals(0, stock.obtener(1))
-        assertEquals(0, stock.obtener(99))
-        assertFailsWith<IllegalArgumentException> { stock.actualizar(1, -1) }
+        val stock = StockRepositorio(mapOf("Masa" to 5))
+        stock.actualizar("Masa", 0)
+        assertEquals(0, stock.obtener("Masa"))
+        assertEquals(0, stock.obtener("Harina"))
+        assertFailsWith<IllegalArgumentException> { stock.actualizar("Masa", -1) }
     }
 
     @Test

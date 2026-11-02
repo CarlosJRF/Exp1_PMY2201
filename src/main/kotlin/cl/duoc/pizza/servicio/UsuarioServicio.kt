@@ -8,10 +8,28 @@ class UsuarioServicio(private val repositorio: UsuarioRepositorio) {
 
     companion object {
         const val LARGO_MINIMO_PASSWORD = 6
+        const val EMAIL_PREDETERMINADO = "correo@invalido.com"
+        const val TELEFONO_PREDETERMINADO = "(000) 000-0000"
         private val FORMATO_EMAIL: Regex = Regex("^[\\w.+-]+@[\\w-]+(\\.[\\w-]+)+$")
         private val FORMATO_TELEFONO: Regex = Regex("^\\+?\\d{8,12}$")
     }
 
+    /** Email en minúsculas si el formato es válido; si no, [EMAIL_PREDETERMINADO]. */
+    fun validarEmail(email: String): String {
+        val normalizado: String = email.trim().lowercase()
+        return if (FORMATO_EMAIL.matches(normalizado)) normalizado else EMAIL_PREDETERMINADO
+    }
+
+    /** Teléfono de 8 a 12 dígitos (con + opcional); si no, [TELEFONO_PREDETERMINADO]. */
+    fun validarTelefono(telefono: String): String {
+        val limpio: String = telefono.trim()
+        return if (FORMATO_TELEFONO.matches(limpio)) limpio else TELEFONO_PREDETERMINADO
+    }
+
+    /**
+     * Registra un cliente. Si el email o el teléfono no tienen un formato válido no se rechaza el registro:
+     * se guardan los valores predeterminados y la UI avisa al usuario.
+     */
     fun registrar(
         nombre: String,
         email: String,
@@ -19,27 +37,28 @@ class UsuarioServicio(private val repositorio: UsuarioRepositorio) {
         telefono: String,
         direccion: String,
     ): Usuario {
-        val emailNormalizado: String = email.trim().lowercase()
+        val emailValidado: String = validarEmail(email)
 
         if (nombre.isBlank()) throw ErrorNegocio("El nombre es obligatorio")
-        if (!FORMATO_EMAIL.matches(emailNormalizado)) throw ErrorNegocio("El email no tiene un formato válido")
-        if (repositorio.buscarPorEmail(emailNormalizado) != null) {
-            throw ErrorNegocio("Ya existe un usuario con ese email")
+        if (repositorio.buscarPorEmail(emailValidado) != null) {
+            val mensaje: String = if (emailValidado == EMAIL_PREDETERMINADO) {
+                "El email no tiene un formato válido y ya hay un usuario con $EMAIL_PREDETERMINADO; ingresa un email correcto"
+            } else {
+                "Ya existe un usuario con ese email"
+            }
+            throw ErrorNegocio(mensaje)
         }
         if (password.length < LARGO_MINIMO_PASSWORD) {
             throw ErrorNegocio("La contraseña debe tener al menos $LARGO_MINIMO_PASSWORD caracteres")
-        }
-        if (!FORMATO_TELEFONO.matches(telefono.trim())) {
-            throw ErrorNegocio("El teléfono debe tener entre 8 y 12 dígitos")
         }
         if (direccion.isBlank()) throw ErrorNegocio("La dirección es obligatoria")
 
         val usuario: Usuario = Usuario(
             id = repositorio.siguienteId(),
             nombre = nombre.trim(),
-            email = emailNormalizado,
+            email = emailValidado,
             passwordHash = Seguridad.hashSha256(password),
-            telefono = telefono.trim(),
+            telefono = validarTelefono(telefono),
             direccion = direccion.trim(),
         )
         repositorio.guardar(usuario)
