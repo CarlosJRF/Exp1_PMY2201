@@ -13,7 +13,7 @@ object DatosIniciales {
         id = 1,
         nombre = "Administrador",
         email = "admin@duocpizza.cl",
-        passwordHash = Seguridad.hashSha256("admin123"),
+        passwordHash = Seguridad.hashPassword("admin123"),
     )
 
     /** Receta base (tamaño personal), en porciones de cada ingrediente. */

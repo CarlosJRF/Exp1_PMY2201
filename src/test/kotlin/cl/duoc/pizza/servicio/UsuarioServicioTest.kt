@@ -3,7 +3,6 @@ package cl.duoc.pizza.servicio
 import cl.duoc.pizza.modelo.Administrador
 import cl.duoc.pizza.repositorio.DatosIniciales
 import cl.duoc.pizza.repositorio.UsuarioRepositorio
-import cl.duoc.pizza.util.Seguridad
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
@@ -29,8 +28,8 @@ class UsuarioServicioTest {
 
         assertEquals("ana@duoc.cl", usuario.email)
         assertNotEquals("secreto", usuario.passwordHash)
-        assertEquals(64, usuario.passwordHash.length)
-        assertTrue(usuario.validarPassword(Seguridad.hashSha256("secreto")))
+        assertTrue(usuario.passwordHash.startsWith("\$argon2id\$"))
+        assertTrue(usuario.validarPassword("secreto"))
     }
 
     @Test

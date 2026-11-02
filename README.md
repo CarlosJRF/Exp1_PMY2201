@@ -5,7 +5,8 @@ pensado para evolucionar más adelante a una app móvil.
 
 ## Funcionalidades
 
-- **Clientes:** registro e inicio de sesión (contraseñas con hash SHA-256). Si el email o el teléfono
+- **Clientes:** registro e inicio de sesión. Las contraseñas se guardan con **Argon2id**
+  (Bouncy Castle, sal aleatoria y formato PHC); nunca se guarda la contraseña original. Si el email o el teléfono
   no tienen un formato válido se registran con valores predeterminados (`correo@invalido.com`,
   `(000) 000-0000`) y se avisa al usuario.
 - **Catálogo:** pizzas en 3 tamaños, bebidas y acompañamientos; cada producto puede describirse
@@ -69,7 +70,7 @@ src/main/kotlin/cl/duoc/pizza/
 ├── repositorio/     # almacenamiento en memoria y datos iniciales
 ├── servicio/        # reglas de negocio (usuarios, inventario, pedidos, reparto, resumen, reporte)
 ├── ui/              # menús y lectura por consola
-└── util/            # hash SHA-256 y formato de precios/fechas
+└── util/            # hash de contraseñas Argon2id y formato de precios/fechas
 ```
 
 La lógica de negocio (`modelo`, `repositorio`, `servicio`) no depende de la consola,

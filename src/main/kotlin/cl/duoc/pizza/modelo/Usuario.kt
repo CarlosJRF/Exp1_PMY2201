@@ -11,5 +11,5 @@ open class Usuario(
     open fun descripcion(): String = "$nombre · ${telefono.ifBlank { "sin teléfono" }} · $email"
 
     /** Por defecto un usuario no puede iniciar sesión; lo permiten Cliente y Administrador. */
-    open fun validarPassword(passwordHash: String): Boolean = false
+    open fun validarPassword(password: String): Boolean = false
 }

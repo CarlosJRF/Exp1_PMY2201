@@ -1,5 +1,7 @@
 package cl.duoc.pizza.modelo
 
+import cl.duoc.pizza.util.Seguridad
+
 /** Administrador de la pizzería: gestiona inventario, pedidos y repartos. */
 class Administrador(
     id: Int,
@@ -10,5 +12,5 @@ class Administrador(
 
     override fun descripcion(): String = "Administrador: ${super.descripcion()}"
 
-    override fun validarPassword(passwordHash: String): Boolean = this.passwordHash == passwordHash
+    override fun validarPassword(password: String): Boolean = Seguridad.verificarPassword(password, passwordHash)
 }

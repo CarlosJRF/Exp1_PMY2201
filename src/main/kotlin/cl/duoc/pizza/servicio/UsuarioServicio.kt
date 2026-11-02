@@ -12,6 +12,7 @@ class UsuarioServicio(private val repositorio: UsuarioRepositorio) {
         const val EMAIL_PREDETERMINADO = Cliente.EMAIL_PREDETERMINADO
         const val TELEFONO_PREDETERMINADO = Cliente.TELEFONO_PREDETERMINADO
         private val FORMATO_EMAIL: Regex = Regex("^[\\w.+-]+@[\\w-]+(\\.[\\w-]+)+$")
+        private val HASH_DE_RELLENO: String = Seguridad.hashPassword("relleno-sin-usuario")
         private val FORMATO_TELEFONO: Regex = Regex("^\\+?\\d{8,12}$")
     }
 
@@ -58,7 +59,7 @@ class UsuarioServicio(private val repositorio: UsuarioRepositorio) {
             id = repositorio.siguienteId(),
             nombre = nombre.trim(),
             email = emailValidado,
-            passwordHash = Seguridad.hashSha256(password),
+            passwordHash = Seguridad.hashPassword(password),
             telefono = validarTelefono(telefono),
             direccion = direccion.trim(),
         )
@@ -70,7 +71,13 @@ class UsuarioServicio(private val repositorio: UsuarioRepositorio) {
 
     fun iniciarSesion(email: String, password: String): Usuario {
         val usuario: Usuario? = repositorio.buscarPorEmail(email)
-        if (usuario == null || !usuario.validarPassword(Seguridad.hashSha256(password))) {
+        if (usuario == null) {
+            // Se verifica igual contra un hash de relleno para que un email inexistente tarde lo mismo
+            // que una contraseña incorrecta y no se pueda saber qué emails están registrados.
+            Seguridad.verificarPassword(password, HASH_DE_RELLENO)
+            throw ErrorNegocio("Email o contraseña incorrectos")
+        }
+        if (!usuario.validarPassword(password)) {
             throw ErrorNegocio("Email o contraseña incorrectos")
         }
         return usuario

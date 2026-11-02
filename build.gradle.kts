@@ -11,6 +11,8 @@ repositories {
 }
 
 dependencies {
+    // Bouncy Castle: implementación de Argon2id para el hash de contraseñas
+    implementation("org.bouncycastle:bcprov-jdk18on:1.86")
     testImplementation(kotlin("test"))
 }
 
