@@ -1,5 +1,7 @@
 package cl.duoc.pizza.ui
 
+import cl.duoc.pizza.modelo.Administrador
+import cl.duoc.pizza.modelo.Cliente
 import cl.duoc.pizza.modelo.Usuario
 import cl.duoc.pizza.servicio.InventarioServicio
 import cl.duoc.pizza.servicio.PedidoServicio
@@ -27,21 +29,21 @@ class MenuPrincipal(
 
     private fun registrar() {
         consola.titulo("Registro de usuario")
-        val usuario: Usuario = usuarioServicio.registrar(
+        val cliente: Cliente = usuarioServicio.registrar(
             nombre = consola.leerTexto("Nombre"),
             email = consola.leerTexto("Email"),
             password = consola.leerPassword("Contraseña (mín. ${UsuarioServicio.LARGO_MINIMO_PASSWORD} caracteres)"),
             telefono = consola.leerTexto("Teléfono"),
             direccion = consola.leerTexto("Dirección"),
         )
-        consola.exito("Usuario registrado. ¡Hola, ${usuario.nombre}!")
-        if (usuario.email == UsuarioServicio.EMAIL_PREDETERMINADO) {
-            consola.error("El email no era válido: se registró como ${usuario.email} (úsalo para iniciar sesión)")
+        consola.exito("Usuario registrado. ¡Hola, ${cliente.nombre}!")
+        if (cliente.email == UsuarioServicio.EMAIL_PREDETERMINADO) {
+            consola.error("El email no era válido: se registró como ${cliente.email} (úsalo para iniciar sesión)")
         }
-        if (usuario.telefono == UsuarioServicio.TELEFONO_PREDETERMINADO) {
-            consola.error("El teléfono no era válido: se registró como ${usuario.telefono}")
+        if (cliente.telefono == UsuarioServicio.TELEFONO_PREDETERMINADO) {
+            consola.error("El teléfono no era válido: se registró como ${cliente.telefono}")
         }
-        abrirSesion(usuario)
+        abrirSesion(cliente)
     }
 
     private fun iniciarSesion() {
@@ -55,10 +57,10 @@ class MenuPrincipal(
     }
 
     private fun abrirSesion(usuario: Usuario) {
-        if (usuario.esAdmin) {
-            MenuAdmin(consola, inventario, pedidoServicio, reparto).mostrar()
-        } else {
-            MenuCliente(usuario, consola, inventario, pedidoServicio).mostrar()
+        when (usuario) {
+            is Administrador -> MenuAdmin(consola, inventario, pedidoServicio, reparto, usuarioServicio).mostrar()
+            is Cliente -> MenuCliente(usuario, consola, inventario, pedidoServicio).mostrar()
+            else -> consola.error("Este usuario no tiene un menú asignado")
         }
         consola.exito("Sesión cerrada")
     }

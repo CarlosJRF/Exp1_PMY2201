@@ -16,9 +16,16 @@ class RepartoServicio(private val repartidores: List<Repartidor>) {
         val repartidor: Repartidor = repartidores.sortedBy { it.distanciaKm }.find { it.disponible }
             ?: throw ErrorNegocio("No hay repartidores disponibles en este momento")
 
-        repartidor.disponible = false
-        pedido.repartidor = repartidor
-        pedido.estado = EstadoPedido.EN_CAMINO
+        repartidor.tomarPedido(pedido)
+        return repartidor
+    }
+
+    /** Registra la entrega del pedido: su repartidor queda disponible para otro reparto. */
+    fun entregar(pedido: Pedido): Repartidor {
+        val repartidor: Repartidor = pedido.repartidor
+            ?: throw ErrorNegocio("El pedido #${pedido.id} no tiene repartidor asignado")
+        if (pedido.entregado) throw ErrorNegocio("El pedido #${pedido.id} ya fue entregado")
+        repartidor.entregarPedido(pedido)
         return repartidor
     }
 }

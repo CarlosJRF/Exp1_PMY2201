@@ -3,68 +3,76 @@ package cl.duoc.pizza.modelo
 import java.time.LocalDateTime
 
 /**
- * Pedido de un usuario. Mientras [estado] es null funciona como carrito;
- * la validación de stock y los cambios de estado los hace PedidoServicio.
+ * Pedido de un cliente. Mientras [estado] es null funciona como carrito;
+ * la validación de stock la hace PedidoServicio.
  */
 class Pedido(
     val id: Int,
-    val usuario: Usuario,
+    val cliente: Cliente,
     val fecha: LocalDateTime = LocalDateTime.now(),
 ) {
-    private val _items: MutableList<ItemPedido> = mutableListOf()
-    val items: List<ItemPedido>
-        get() = _items.toList()
+    /** Un elemento por unidad pedida: 2 Margaritas son 2 elementos. */
+    private val _productos: MutableList<Producto> = mutableListOf()
+    val productos: List<Producto>
+        get() = _productos.toList()
 
     var estado: EstadoPedido? = null
+        private set
 
     /** Repartidor asignado cuando el pedido sale en camino. */
     var repartidor: Repartidor? = null
 
+    var entregado: Boolean = false
+
     val estadoVisible: String
         get() = estado?.nombreVisible ?: "En carrito"
 
-    /** Suma de los subtotales, antes de descuentos e impuestos. */
+    /** Unidades de cada producto, en el orden en que se agregaron. */
+    val cantidades: Map<Producto, Int>
+        get() = _productos.groupingBy { it }.eachCount()
+
+    /** Suma de los precios, antes de descuentos e impuestos. */
     val subtotal: Int
-        get() = _items.sumOf { it.subtotal }
+        get() = _productos.sumOf { it.precio }
 
     val cantidadPizzas: Int
-        get() = _items.filter { it.producto.categoria == Categoria.PIZZA }.sumOf { it.cantidad }
+        get() = _productos.count { it.categoria == Categoria.PIZZA }
 
-    /** Subtotal, descuento, IVA y total según [calcularTotal]. */
-    val totales: Totales
-        get() = calcularTotal(subtotal, cantidadPizzas)
-
-    /** Monto final a pagar. */
     val total: Int
-        get() = totales.total
+        get() = calcularTotal().total
 
     val cantidadUnidades: Int
-        get() = _items.sumOf { it.cantidad }
+        get() = _productos.size
 
     val estaVacio: Boolean
-        get() = _items.isEmpty()
+        get() = _productos.isEmpty()
 
-    fun cantidadDe(producto: Producto): Int =
-        _items.find { it.producto.id == producto.id }?.cantidad ?: 0
+    /** Subtotal, descuento, IVA y total del pedido (ver la función calcularTotal de Totales.kt). */
+    fun calcularTotal(): Totales = calcularTotal(subtotal, cantidadPizzas)
 
-    /** Agrega el producto; si ya estaba en el pedido, suma la cantidad. */
-    fun agregar(producto: Producto, cantidad: Int) {
-        require(cantidad > 0) { "La cantidad debe ser mayor a 0" }
-        val actual: Int = cantidadDe(producto)
-        _items.removeIf { it.producto.id == producto.id }
-        _items.add(ItemPedido(producto, actual + cantidad))
+    /** Cambia el estado respetando el orden: carrito -> En preparación -> Listo -> En camino. */
+    fun cambiarEstado(nuevo: EstadoPedido) {
+        val siguiente: EstadoPedido? = when (estado) {
+            null -> EstadoPedido.EN_PREPARACION
+            EstadoPedido.EN_PREPARACION -> EstadoPedido.LISTO
+            EstadoPedido.LISTO -> EstadoPedido.EN_CAMINO
+            EstadoPedido.EN_CAMINO -> null
+        }
+        require(nuevo == siguiente) { "El pedido #$id no puede pasar de $estadoVisible a ${nuevo.nombreVisible}" }
+        estado = nuevo
     }
 
-    /** Quita la cantidad indicada; si llega a 0, elimina el producto del pedido. */
+    fun cantidadDe(producto: Producto): Int = _productos.count { it.id == producto.id }
+
+    fun agregar(producto: Producto, cantidad: Int) {
+        require(cantidad > 0) { "La cantidad debe ser mayor a 0" }
+        repeat(cantidad) { _productos.add(producto) }
+    }
+
+    /** Quita la cantidad indicada; si es mayor a la que hay, quita todas las unidades del producto. */
     fun quitar(producto: Producto, cantidad: Int) {
         require(cantidad > 0) { "La cantidad debe ser mayor a 0" }
-        val actual: Int = cantidadDe(producto)
-        require(actual > 0) { "El producto no está en el pedido" }
-        val indice: Int = _items.indexOfFirst { it.producto.id == producto.id }
-        if (cantidad >= actual) {
-            _items.removeAt(indice)
-        } else {
-            _items[indice] = ItemPedido(producto, actual - cantidad)
-        }
+        require(cantidadDe(producto) > 0) { "El producto no está en el pedido" }
+        repeat(minOf(cantidad, cantidadDe(producto))) { _productos.remove(producto) }
     }
 }

@@ -5,7 +5,6 @@ import cl.duoc.pizza.modelo.PIZZAS_PARA_DESCUENTO
 import cl.duoc.pizza.modelo.PORCENTAJE_DESCUENTO
 import cl.duoc.pizza.modelo.PORCENTAJE_IVA
 import cl.duoc.pizza.modelo.Pedido
-import cl.duoc.pizza.modelo.Repartidor
 import cl.duoc.pizza.servicio.InventarioServicio
 import cl.duoc.pizza.util.Formato
 
@@ -33,11 +32,8 @@ object Vistas {
     fun promociones(): String =
         "Promoción: más de $PIZZAS_PARA_DESCUENTO pizzas = $PORCENTAJE_DESCUENTO% dcto. · Precios sin IVA ($PORCENTAJE_IVA%)."
 
-    fun lineaRepartidor(repartidor: Repartidor): String =
-        "${repartidor.nombre.padEnd(16)} ${repartidor.distanciaKm.toString().padStart(4)} km  " +
-            if (repartidor.disponible) "Disponible" else "En reparto"
-
     fun lineaPedido(pedido: Pedido): String =
-        "#${pedido.id}  ${Formato.fecha(pedido.fecha)}  ${pedido.usuario.email.padEnd(24)} " +
-            "${Formato.precio(pedido.total).padStart(9)}  ${pedido.estadoVisible}"
+        "#${pedido.id}  ${Formato.fecha(pedido.fecha)}  ${pedido.cliente.email.padEnd(24)} " +
+            "${Formato.precio(pedido.total).padStart(9)}  ${pedido.estadoVisible}" +
+            if (pedido.entregado) " (entregado)" else ""
 }

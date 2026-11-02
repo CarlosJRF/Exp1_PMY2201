@@ -3,7 +3,7 @@ package cl.duoc.pizza.repositorio
 import cl.duoc.pizza.modelo.Categoria
 import cl.duoc.pizza.modelo.Pedido
 import cl.duoc.pizza.modelo.Tamano
-import cl.duoc.pizza.modelo.Usuario
+import cl.duoc.pizza.modelo.Cliente
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -13,7 +13,7 @@ import kotlin.test.assertTrue
 
 class RepositoriosTest {
     private fun usuario(id: Int, email: String) =
-        Usuario(id, "Ana", email, "secreto", "912345678", "Av. Siempre Viva 123")
+        Cliente(id, "Ana", email, "secreto", "912345678", "Av. Siempre Viva 123")
 
     @Test
     fun `usuario se busca por email sin distinguir mayusculas`() {
@@ -69,7 +69,7 @@ class RepositoriosTest {
         repo.guardar(Pedido(repo.siguienteId(), luis))
         repo.guardar(Pedido(repo.siguienteId(), ana))
 
-        assertEquals(listOf(1, 3), repo.listarPorUsuario(ana.id).map { it.id })
+        assertEquals(listOf(1, 3), repo.listarPorCliente(ana.id).map { it.id })
         assertNotNull(repo.buscarPorId(2))
     }
 }

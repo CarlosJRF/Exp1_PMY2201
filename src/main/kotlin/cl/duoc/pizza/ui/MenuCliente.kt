@@ -1,11 +1,10 @@
 package cl.duoc.pizza.ui
 
+import cl.duoc.pizza.modelo.Cliente
 import cl.duoc.pizza.modelo.EstadoPedido
-import cl.duoc.pizza.modelo.ItemPedido
 import cl.duoc.pizza.modelo.Pedido
 import cl.duoc.pizza.modelo.Producto
 import cl.duoc.pizza.modelo.Totales
-import cl.duoc.pizza.modelo.Usuario
 import cl.duoc.pizza.servicio.ErrorNegocio
 import cl.duoc.pizza.servicio.InventarioServicio
 import cl.duoc.pizza.servicio.PedidoServicio
@@ -13,7 +12,7 @@ import cl.duoc.pizza.servicio.ResumenPedido
 import cl.duoc.pizza.util.Formato
 
 class MenuCliente(
-    private val usuario: Usuario,
+    private val cliente: Cliente,
     private val consola: Consola,
     private val inventario: InventarioServicio,
     private val pedidoServicio: PedidoServicio,
@@ -35,7 +34,7 @@ class MenuCliente(
 
     fun mostrar() {
         while (true) {
-            val opcion: Int = consola.menu("Menú cliente — ${usuario.nombre}", opciones, "Cerrar sesión")
+            val opcion: Int = consola.menu("Menú cliente — ${cliente.nombre}", opciones, "Cerrar sesión")
             consola.intentar {
                 when (opcion) {
                     1 -> verCatalogo()
@@ -63,7 +62,8 @@ class MenuCliente(
         val id: Int = consola.leerEntero("Id del producto (0 para volver)", 0, Int.MAX_VALUE)
         if (id == 0) return
         val producto: Producto = inventario.buscarProducto(id)
-        val pedido: Pedido = pedidoServicio.pedidoActual(usuario)
+        consola.mensaje(producto.detallarProducto())
+        val pedido: Pedido = pedidoServicio.pedidoActual(cliente)
         pedidoServicio.verificarDisponibilidad(pedido, producto, 1)
         val disponible: Int = pedidoServicio.disponibleParaAgregar(pedido, producto)
         consola.mensaje("Disponible para agregar: $disponible")
@@ -77,37 +77,37 @@ class MenuCliente(
     }
 
     private fun quitarProducto() {
-        val pedido: Pedido = pedidoServicio.pedidoActual(usuario)
+        val pedido: Pedido = pedidoServicio.pedidoActual(cliente)
         if (pedido.estaVacio) throw ErrorNegocio("Tu pedido está vacío")
 
         consola.titulo("Quitar producto")
-        val items: List<ItemPedido> = pedido.items
-        items.forEachIndexed { indice, item ->
-            consola.mensaje("${indice + 1}. ${item.cantidad} x ${item.producto.nombreCompleto}")
+        val enPedido: List<Producto> = pedido.cantidades.keys.toList()
+        enPedido.forEachIndexed { indice, producto ->
+            consola.mensaje("${indice + 1}. ${pedido.cantidadDe(producto)} x ${producto.nombreCompleto}")
         }
-        val numero: Int = consola.leerEntero("Producto a quitar (0 para volver)", 0, items.size)
+        val numero: Int = consola.leerEntero("Producto a quitar (0 para volver)", 0, enPedido.size)
         if (numero == 0) return
-        val item: ItemPedido = items[numero - 1]
-        val cantidad: Int = consola.leerEntero("Cantidad a quitar", 1, item.cantidad)
+        val producto: Producto = enPedido[numero - 1]
+        val cantidad: Int = consola.leerEntero("Cantidad a quitar", 1, pedido.cantidadDe(producto))
 
-        pedidoServicio.quitarProducto(pedido, item.producto, cantidad)
-        consola.exito("Quitado: $cantidad x ${item.producto.nombreCompleto}. ${totalConDescuento(pedido)}")
+        pedidoServicio.quitarProducto(pedido, producto, cantidad)
+        consola.exito("Quitado: $cantidad x ${producto.nombreCompleto}. ${totalConDescuento(pedido)}")
     }
 
     /** "Total: $X" (con IVA) y, si corresponde, el descuento aplicado. */
     private fun totalConDescuento(pedido: Pedido): String {
-        val totales: Totales = pedido.totales
+        val totales: Totales = pedido.calcularTotal()
         val total: String = "Total con IVA: ${Formato.precio(totales.total)}"
         return if (totales.descuento == 0) total else "$total (incluye ${Formato.precio(totales.descuento)} de descuento)"
     }
 
     private fun verPedidoActual() {
         consola.titulo("Pedido actual")
-        consola.mensaje(ResumenPedido.generar(pedidoServicio.pedidoActual(usuario)))
+        consola.mensaje(ResumenPedido.generar(pedidoServicio.pedidoActual(cliente)))
     }
 
     private fun confirmarPedido() {
-        val pedido: Pedido = pedidoServicio.pedidoActual(usuario)
+        val pedido: Pedido = pedidoServicio.pedidoActual(cliente)
         if (pedido.estaVacio) throw ErrorNegocio("Tu pedido está vacío")
 
         verPedidoActual()
@@ -119,7 +119,7 @@ class MenuCliente(
 
     private fun verMisPedidos() {
         consola.titulo("Mis pedidos")
-        val pedidos: List<Pedido> = pedidoServicio.pedidosDe(usuario).filter { !it.estaVacio }
+        val pedidos: List<Pedido> = pedidoServicio.pedidosDe(cliente).filter { !it.estaVacio }
         if (pedidos.isEmpty()) {
             consola.mensaje("Aún no tienes pedidos")
             return
@@ -128,7 +128,7 @@ class MenuCliente(
     }
 
     private fun cancelarPedido() {
-        val cancelables: List<Pedido> = pedidoServicio.pedidosDe(usuario)
+        val cancelables: List<Pedido> = pedidoServicio.pedidosDe(cliente)
             .filter { (it.estado == null && !it.estaVacio) || it.estado == EstadoPedido.EN_PREPARACION }
         if (cancelables.isEmpty()) throw ErrorNegocio("No tienes pedidos para cancelar")
 

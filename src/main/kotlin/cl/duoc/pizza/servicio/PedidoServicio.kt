@@ -1,10 +1,9 @@
 package cl.duoc.pizza.servicio
 
+import cl.duoc.pizza.modelo.Cliente
 import cl.duoc.pizza.modelo.EstadoPedido
-import cl.duoc.pizza.modelo.ItemPedido
 import cl.duoc.pizza.modelo.Pedido
 import cl.duoc.pizza.modelo.Producto
-import cl.duoc.pizza.modelo.Usuario
 import cl.duoc.pizza.repositorio.PedidoRepositorio
 import java.time.LocalDate
 
@@ -14,19 +13,19 @@ class PedidoServicio(
 ) {
 
     /** Devuelve el carrito (pedido sin confirmar) del usuario, o crea uno nuevo si no tiene. */
-    fun pedidoActual(usuario: Usuario): Pedido =
-        pedidosDe(usuario).find { it.estado == null }
-            ?: Pedido(pedidoRepositorio.siguienteId(), usuario).also { pedidoRepositorio.guardar(it) }
+    fun pedidoActual(cliente: Cliente): Pedido =
+        pedidosDe(cliente).find { it.estado == null }
+            ?: Pedido(pedidoRepositorio.siguienteId(), cliente).also { pedidoRepositorio.guardar(it) }
 
     /** Unidades que todavía se pueden agregar: lo que alcanza con los ingredientes que no usa ya el pedido. */
     fun disponibleParaAgregar(pedido: Pedido, producto: Producto): Int =
-        inventario.unidadesDisponibles(producto, inventario.necesarios(pedido.items))
+        inventario.unidadesDisponibles(producto, inventario.necesarios(pedido.cantidades))
 
     /** Lanza ErrorNegocio con los ingredientes insuficientes si no se pueden agregar [cantidad] unidades. */
     fun verificarDisponibilidad(pedido: Pedido, producto: Producto, cantidad: Int) {
         if (cantidad <= disponibleParaAgregar(pedido, producto)) return
         val faltantes: List<IngredienteFaltante> =
-            inventario.evaluarDisponibilidad(pedido.items + ItemPedido(producto, cantidad))
+            inventario.evaluarDisponibilidad(pedido.cantidades + (producto to pedido.cantidadDe(producto) + cantidad))
         throw ErrorNegocio("No se puede agregar $cantidad x ${producto.nombreCompleto}.\n${inventario.mensajeFaltantes(faltantes)}")
     }
 
@@ -49,20 +48,20 @@ class PedidoServicio(
         validarCarrito(pedido)
         if (pedido.estaVacio) throw ErrorNegocio("No se puede confirmar un pedido vacío")
 
-        val faltantes: List<IngredienteFaltante> = inventario.evaluarDisponibilidad(pedido.items)
+        val faltantes: List<IngredienteFaltante> = inventario.evaluarDisponibilidad(pedido.cantidades)
         if (faltantes.isNotEmpty()) {
             throw ErrorNegocio("No se pudo confirmar el pedido #${pedido.id}.\n${inventario.mensajeFaltantes(faltantes)}")
         }
 
-        inventario.descontar(pedido.items)
-        pedido.estado = EstadoPedido.EN_PREPARACION
+        inventario.descontar(pedido.cantidades)
+        pedido.cambiarEstado(EstadoPedido.EN_PREPARACION)
     }
 
     /** Pasa un pedido en preparación a Listo. Para salir En camino se asigna un repartidor (RepartoServicio). */
     fun marcarListo(pedido: Pedido) {
         when (pedido.estado) {
             null -> throw ErrorNegocio("El pedido #${pedido.id} aún no está confirmado")
-            EstadoPedido.EN_PREPARACION -> pedido.estado = EstadoPedido.LISTO
+            EstadoPedido.EN_PREPARACION -> pedido.cambiarEstado(EstadoPedido.LISTO)
             EstadoPedido.LISTO, EstadoPedido.EN_CAMINO ->
                 throw ErrorNegocio("El pedido #${pedido.id} ya está ${pedido.estadoVisible.lowercase()}")
         }
@@ -72,7 +71,7 @@ class PedidoServicio(
     fun cancelar(pedido: Pedido) {
         when (pedido.estado) {
             null -> Unit
-            EstadoPedido.EN_PREPARACION -> inventario.devolver(pedido.items)
+            EstadoPedido.EN_PREPARACION -> inventario.devolver(pedido.cantidades)
             EstadoPedido.LISTO, EstadoPedido.EN_CAMINO ->
                 throw ErrorNegocio("El pedido #${pedido.id} ya está ${pedido.estadoVisible.lowercase()} y no se puede cancelar")
         }
@@ -82,7 +81,7 @@ class PedidoServicio(
     fun buscarPedido(id: Int): Pedido =
         pedidoRepositorio.buscarPorId(id) ?: throw ErrorNegocio("No existe un pedido con id $id")
 
-    fun pedidosDe(usuario: Usuario): List<Pedido> = pedidoRepositorio.listarPorUsuario(usuario.id)
+    fun pedidosDe(cliente: Cliente): List<Pedido> = pedidoRepositorio.listarPorCliente(cliente.id)
 
     /** Todos los pedidos confirmados (sin carritos). */
     fun todosLosPedidos(): List<Pedido> = pedidoRepositorio.listar().filter { it.estado != null }

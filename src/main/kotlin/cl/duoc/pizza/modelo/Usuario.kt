@@ -1,11 +1,15 @@
 package cl.duoc.pizza.modelo
 
-data class Usuario(
+/** Persona del sistema con sus datos de contacto. Se especializa en Cliente, Repartidor y Administrador. */
+open class Usuario(
     val id: Int,
     val nombre: String,
-    val email: String,
-    val passwordHash: String,
     val telefono: String,
-    val direccion: String,
-    val esAdmin: Boolean = false,
-)
+    val email: String,
+) {
+    /** Descripción para listados; cada subclase agrega lo suyo. */
+    open fun descripcion(): String = "$nombre · ${telefono.ifBlank { "sin teléfono" }} · $email"
+
+    /** Por defecto un usuario no puede iniciar sesión; lo permiten Cliente y Administrador. */
+    open fun validarPassword(passwordHash: String): Boolean = false
+}

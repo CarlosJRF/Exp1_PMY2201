@@ -2,8 +2,8 @@ package cl.duoc.pizza.servicio
 
 import cl.duoc.pizza.modelo.Categoria
 import cl.duoc.pizza.modelo.EstadoPedido
-import cl.duoc.pizza.modelo.ItemPedido
 import cl.duoc.pizza.modelo.Pedido
+import cl.duoc.pizza.modelo.Producto
 import cl.duoc.pizza.util.Formato
 import java.time.LocalDate
 
@@ -21,10 +21,10 @@ object ReporteDiario {
     fun generar(pedidos: Array<Pedido>, fecha: LocalDate = LocalDate.now()): String = buildString {
         appendLine("Reporte del día ${Formato.dia(fecha)}: ${pedidos.size} pedido(s)")
         for (pedido in pedidos) {
-            val pizzas: List<ItemPedido> = pedido.items.filter { it.producto.categoria == Categoria.PIZZA }
+            val pizzas: Map<Producto, Int> = pedido.cantidades.filterKeys { it.categoria == Categoria.PIZZA }
             val detallePizzas: String =
-                if (pizzas.isEmpty()) "(sin pizzas)" else pizzas.joinToString { "${it.cantidad} x ${it.producto.nombreCompleto}" }
-            appendLine("#${pedido.id}  Cliente: ${pedido.usuario.nombre}")
+                if (pizzas.isEmpty()) "(sin pizzas)" else pizzas.entries.joinToString { "${it.value} x ${it.key.nombreCompleto}" }
+            appendLine("#${pedido.id}  Cliente: ${pedido.cliente.nombre}")
             appendLine("    Pizzas: $detallePizzas")
             appendLine("    Total: ${Formato.precio(pedido.total)}  Estado: ${pedido.estadoVisible}")
         }

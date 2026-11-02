@@ -1,5 +1,6 @@
 package cl.duoc.pizza.servicio
 
+import cl.duoc.pizza.modelo.Cliente
 import cl.duoc.pizza.modelo.Usuario
 import cl.duoc.pizza.repositorio.UsuarioRepositorio
 import cl.duoc.pizza.util.Seguridad
@@ -36,7 +37,7 @@ class UsuarioServicio(private val repositorio: UsuarioRepositorio) {
         password: String,
         telefono: String,
         direccion: String,
-    ): Usuario {
+    ): Cliente {
         val emailValidado: String = validarEmail(email)
 
         if (nombre.isBlank()) throw ErrorNegocio("El nombre es obligatorio")
@@ -53,7 +54,7 @@ class UsuarioServicio(private val repositorio: UsuarioRepositorio) {
         }
         if (direccion.isBlank()) throw ErrorNegocio("La dirección es obligatoria")
 
-        val usuario: Usuario = Usuario(
+        val cliente: Cliente = Cliente(
             id = repositorio.siguienteId(),
             nombre = nombre.trim(),
             email = emailValidado,
@@ -61,13 +62,15 @@ class UsuarioServicio(private val repositorio: UsuarioRepositorio) {
             telefono = validarTelefono(telefono),
             direccion = direccion.trim(),
         )
-        repositorio.guardar(usuario)
-        return usuario
+        repositorio.guardar(cliente)
+        return cliente
     }
+
+    fun listar(): List<Usuario> = repositorio.listar()
 
     fun iniciarSesion(email: String, password: String): Usuario {
         val usuario: Usuario? = repositorio.buscarPorEmail(email)
-        if (usuario == null || usuario.passwordHash != Seguridad.hashSha256(password)) {
+        if (usuario == null || !usuario.validarPassword(Seguridad.hashSha256(password))) {
             throw ErrorNegocio("Email o contraseña incorrectos")
         }
         return usuario

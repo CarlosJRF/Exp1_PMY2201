@@ -1,11 +1,14 @@
 package cl.duoc.pizza.servicio
 
+import cl.duoc.pizza.modelo.Administrador
 import cl.duoc.pizza.repositorio.DatosIniciales
 import cl.duoc.pizza.repositorio.UsuarioRepositorio
+import cl.duoc.pizza.util.Seguridad
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
@@ -27,7 +30,7 @@ class UsuarioServicioTest {
         assertEquals("ana@duoc.cl", usuario.email)
         assertNotEquals("secreto", usuario.passwordHash)
         assertEquals(64, usuario.passwordHash.length)
-        assertTrue(!usuario.esAdmin)
+        assertTrue(usuario.validarPassword(Seguridad.hashSha256("secreto")))
     }
 
     @Test
@@ -58,7 +61,7 @@ class UsuarioServicioTest {
     fun `inicia sesion con credenciales correctas`() {
         val ana = registrarAna()
         assertEquals(ana, servicio.iniciarSesion("ana@duoc.cl", "secreto"))
-        assertTrue(servicio.iniciarSesion("admin@duocpizza.cl", "admin123").esAdmin)
+        assertIs<Administrador>(servicio.iniciarSesion("admin@duocpizza.cl", "admin123"))
     }
 
     @Test

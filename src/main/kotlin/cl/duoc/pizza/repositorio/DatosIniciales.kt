@@ -1,22 +1,19 @@
 package cl.duoc.pizza.repositorio
 
+import cl.duoc.pizza.modelo.Administrador
 import cl.duoc.pizza.modelo.Categoria
 import cl.duoc.pizza.modelo.Producto
 import cl.duoc.pizza.modelo.Repartidor
 import cl.duoc.pizza.modelo.Tamano
-import cl.duoc.pizza.modelo.Usuario
 import cl.duoc.pizza.util.Seguridad
 
 /** Datos precargados al iniciar la app (no hay persistencia todavía). */
 object DatosIniciales {
-    val admin: Usuario = Usuario(
+    val admin: Administrador = Administrador(
         id = 1,
         nombre = "Administrador",
         email = "admin@duocpizza.cl",
         passwordHash = Seguridad.hashSha256("admin123"),
-        telefono = "",
-        direccion = "",
-        esAdmin = true,
     )
 
     /** Receta base (tamaño personal), en porciones de cada ingrediente. */
@@ -50,9 +47,9 @@ object DatosIniciales {
     )
 
     val repartidores: List<Repartidor> = listOf(
-        Repartidor(1, "Pedro Soto", "+56911111111", 2.5),
-        Repartidor(2, "Camila Rojas", "+56922222222", 0.8),
-        Repartidor(3, "Diego Muñoz", "+56933333333", 4.1),
+        Repartidor(1, "Pedro Soto", "+56911111111", "pedro@duocpizza.cl", 2.5),
+        Repartidor(2, "Camila Rojas", "+56922222222", "camila@duocpizza.cl", 0.8),
+        Repartidor(3, "Diego Muñoz", "+56933333333", "diego@duocpizza.cl", 4.1),
     )
 
     /** Inventario inicial: nombre del ingrediente -> cantidad disponible. */

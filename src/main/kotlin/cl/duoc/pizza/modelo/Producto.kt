@@ -1,5 +1,7 @@
 package cl.duoc.pizza.modelo
 
+import cl.duoc.pizza.util.Formato
+
 /**
  * Producto del catálogo. Cada tamaño de una pizza es un producto distinto.
  * [ingredientes] indica cuánto de cada ingrediente se usa por unidad; si no se indica,
@@ -22,4 +24,13 @@ data class Producto(
 
     val nombreCompleto: String
         get() = if (tamano != null) "$nombre ${tamano.nombreVisible}" else nombre
+
+    /** Descripción completa: nombre, precio, categoría y, en las pizzas, sus ingredientes. */
+    fun detallarProducto(): String {
+        val detalle: String = "$nombreCompleto (${Formato.precio(precio)}) · ${categoria.nombreVisible}"
+        return when (categoria) {
+            Categoria.PIZZA -> "$detalle · Ingredientes: ${ingredientes.keys.joinToString()}"
+            else -> detalle
+        }
+    }
 }

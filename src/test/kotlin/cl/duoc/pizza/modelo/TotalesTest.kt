@@ -19,12 +19,12 @@ class TotalesTest {
 
     @Test
     fun `el pedido cuenta solo las pizzas para el descuento`() {
-        val pedido = Pedido(1, Usuario(1, "Ana", "ana@duoc.cl", "hash", "912345678", "Av. Siempre Viva 123"))
+        val pedido = Pedido(1, Cliente(1, "Ana", "ana@duoc.cl", "hash", "912345678", "Av. Siempre Viva 123"))
         pedido.agregar(Producto(1, "Margarita", Categoria.PIZZA, 9990, Tamano.MEDIANA), 3)
         pedido.agregar(Producto(2, "Coca-Cola 1.5L", Categoria.BEBIDA, 2490), 5)
 
         assertEquals(3, pedido.cantidadPizzas)
-        assertEquals(0, pedido.totales.descuento)
+        assertEquals(0, pedido.calcularTotal().descuento)
     }
 
     @Test

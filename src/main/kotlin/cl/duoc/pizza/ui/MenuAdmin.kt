@@ -2,16 +2,19 @@ package cl.duoc.pizza.ui
 
 import cl.duoc.pizza.modelo.Pedido
 import cl.duoc.pizza.modelo.Repartidor
+import cl.duoc.pizza.modelo.Usuario
 import cl.duoc.pizza.servicio.InventarioServicio
 import cl.duoc.pizza.servicio.PedidoServicio
 import cl.duoc.pizza.servicio.RepartoServicio
 import cl.duoc.pizza.servicio.ReporteDiario
+import cl.duoc.pizza.servicio.UsuarioServicio
 
 class MenuAdmin(
     private val consola: Consola,
     private val inventario: InventarioServicio,
     private val pedidoServicio: PedidoServicio,
     private val reparto: RepartoServicio,
+    private val usuarioServicio: UsuarioServicio,
 ) {
 
     companion object {
@@ -25,6 +28,8 @@ class MenuAdmin(
         "Reporte del día",
         "Marcar pedido como listo",
         "Asignar repartidor a un pedido listo",
+        "Registrar entrega de un pedido",
+        "Ver usuarios y repartidores",
     )
 
     fun mostrar() {
@@ -38,6 +43,8 @@ class MenuAdmin(
                     4 -> verReporteDelDia()
                     5 -> marcarListo()
                     6 -> asignarRepartidor()
+                    7 -> registrarEntrega()
+                    8 -> verUsuarios()
                 }
             }
             if (opcion == 0) return
@@ -89,10 +96,25 @@ class MenuAdmin(
 
     private fun asignarRepartidor() {
         consola.titulo("Repartidores")
-        reparto.repartidores().forEach { consola.mensaje(Vistas.lineaRepartidor(it)) }
+        reparto.repartidores().forEach { consola.mensaje(it.descripcion()) }
         val pedido: Pedido = elegirPedido() ?: return
         val repartidor: Repartidor = reparto.asignar(pedido)
         consola.exito("Pedido #${pedido.id} asignado a ${repartidor.nombre} (${repartidor.distanciaKm} km): ${pedido.estadoVisible}")
+    }
+
+    private fun registrarEntrega() {
+        val pedido: Pedido = elegirPedido() ?: return
+        val repartidor: Repartidor = reparto.entregar(pedido)
+        consola.exito("Pedido #${pedido.id} entregado por ${repartidor.nombre}, que queda disponible")
+    }
+
+    /** Lista clientes, administradores y repartidores; cada uno se describe a su manera (polimorfismo). */
+    private fun verUsuarios() {
+        consola.titulo("Usuarios y repartidores")
+        val personas: List<Usuario> = usuarioServicio.listar() + reparto.repartidores()
+        for (persona in personas) {
+            consola.mensaje(persona.descripcion())
+        }
     }
 
     /** Muestra los pedidos y devuelve el elegido, o null si el usuario vuelve. */

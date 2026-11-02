@@ -1,7 +1,6 @@
 package cl.duoc.pizza.servicio
 
 import cl.duoc.pizza.modelo.Categoria
-import cl.duoc.pizza.modelo.ItemPedido
 import cl.duoc.pizza.modelo.Producto
 import cl.duoc.pizza.repositorio.ProductoRepositorio
 import cl.duoc.pizza.repositorio.StockRepositorio
@@ -38,7 +37,7 @@ class InventarioServicioTest {
 
     @Test
     fun `informa los ingredientes insuficientes y como reabastecerlos`() {
-        val faltantes = inventario.evaluarDisponibilidad(listOf(ItemPedido(pizza, 4), ItemPedido(bebida, 1)))
+        val faltantes = inventario.evaluarDisponibilidad(mapOf(pizza to 4, bebida to 1))
 
         assertEquals(listOf("Queso", "Agua"), faltantes.map { it.nombre })
         val mensaje = inventario.mensajeFaltantes(faltantes)
@@ -49,11 +48,11 @@ class InventarioServicioTest {
 
     @Test
     fun `descontar usa los ingredientes y no deja stock negativo`() {
-        inventario.descontar(listOf(ItemPedido(pizza, 2)))
+        inventario.descontar(mapOf(pizza to 2))
         assertEquals(3, inventario.stockDe("Masa"))
         assertEquals(2, inventario.stockDe("Queso"))
 
-        assertFailsWith<ErrorNegocio> { inventario.descontar(listOf(ItemPedido(pizza, 2))) }
+        assertFailsWith<ErrorNegocio> { inventario.descontar(mapOf(pizza to 2)) }
         assertEquals(3, inventario.stockDe("Masa"))
     }
 

@@ -5,23 +5,24 @@ import cl.duoc.pizza.modelo.EstadoPedido
 import cl.duoc.pizza.modelo.Pedido
 import cl.duoc.pizza.modelo.Producto
 import cl.duoc.pizza.modelo.Tamano
-import cl.duoc.pizza.modelo.Usuario
+import cl.duoc.pizza.modelo.Cliente
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 
 class ReporteDiarioTest {
-    private val ana = Usuario(1, "Ana", "ana@duoc.cl", "hash", "912345678", "Av. Siempre Viva 123")
-    private val luis = Usuario(2, "Luis", "luis@duoc.cl", "hash", "987654321", "Los Aromos 45")
+    private val ana = Cliente(1, "Ana", "ana@duoc.cl", "hash", "912345678", "Av. Siempre Viva 123")
+    private val luis = Cliente(2, "Luis", "luis@duoc.cl", "hash", "987654321", "Los Aromos 45")
     private val margarita = Producto(1, "Margarita", Categoria.PIZZA, 9990, Tamano.MEDIANA)
     private val bebida = Producto(2, "Agua", Categoria.BEBIDA, 1290)
 
-    private fun pedido(id: Int, usuario: Usuario, estado: EstadoPedido): Pedido =
+    private fun pedido(id: Int, usuario: Cliente, estado: EstadoPedido): Pedido =
         Pedido(id, usuario).apply {
             agregar(margarita, 1)
             agregar(bebida, 1)
-            this.estado = estado
+            val camino: List<EstadoPedido> = EstadoPedido.entries.takeWhile { it != estado } + estado
+            camino.forEach { cambiarEstado(it) }
         }
 
     private val pedidos: Array<Pedido> = arrayOf(

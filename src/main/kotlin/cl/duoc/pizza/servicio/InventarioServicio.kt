@@ -1,6 +1,5 @@
 package cl.duoc.pizza.servicio
 
-import cl.duoc.pizza.modelo.ItemPedido
 import cl.duoc.pizza.modelo.Producto
 import cl.duoc.pizza.repositorio.ProductoRepositorio
 import cl.duoc.pizza.repositorio.StockRepositorio
@@ -32,18 +31,18 @@ class InventarioServicio(
     fun cantidadParaLote(ingredientes: Map<String, Int>, cantidadPizzas: Int): Map<String, Int> =
         ingredientes.mapValues { (_, porUnidad) -> porUnidad * cantidadPizzas }
 
-    /** Total de cada ingrediente que necesitan los items. */
-    fun necesarios(items: List<ItemPedido>): Map<String, Int> {
+    /** Total de cada ingrediente que necesitan los productos (producto -> unidades). */
+    fun necesarios(cantidades: Map<Producto, Int>): Map<String, Int> {
         val total: MutableMap<String, Int> = mutableMapOf()
-        for (item in items) {
-            for ((ingrediente, cantidad) in cantidadParaLote(item.producto.ingredientes, item.cantidad)) {
+        for ((producto, unidades) in cantidades) {
+            for ((ingrediente, cantidad) in cantidadParaLote(producto.ingredientes, unidades)) {
                 total[ingrediente] = (total[ingrediente] ?: 0) + cantidad
             }
         }
         return total
     }
 
-    /** Unidades del producto que se pueden preparar con el stock, sin contar lo [reservado] por otros items. */
+    /** Unidades del producto que se pueden preparar con el stock, sin contar lo [reservado] por otros productos. */
     fun unidadesDisponibles(producto: Producto, reservado: Map<String, Int> = emptyMap()): Int =
         producto.ingredientes.minOf { (ingrediente, porUnidad) ->
             maxOf(0, stockDe(ingrediente) - (reservado[ingrediente] ?: 0)) / porUnidad
@@ -72,8 +71,9 @@ class InventarioServicio(
         }
     }
 
-    /** Revisa cada ingrediente que necesitan los items y devuelve los que no alcanzan (vacío si alcanza todo). */
-    fun evaluarDisponibilidad(items: List<ItemPedido>): List<IngredienteFaltante> = faltantesDe(necesarios(items))
+    /** Revisa cada ingrediente que necesitan los productos y devuelve los que no alcanzan (vacío si alcanza todo). */
+    fun evaluarDisponibilidad(cantidades: Map<Producto, Int>): List<IngredienteFaltante> =
+        faltantesDe(necesarios(cantidades))
 
     private fun faltantesDe(necesarios: Map<String, Int>): List<IngredienteFaltante> {
         val faltantes: MutableList<IngredienteFaltante> = mutableListOf()
@@ -120,18 +120,18 @@ class InventarioServicio(
         return necesarios
     }
 
-    /** Prepara cada item como un lote. Si falta algún ingrediente para el total, no descuenta nada. */
-    fun descontar(items: List<ItemPedido>) {
-        val faltantes: List<IngredienteFaltante> = evaluarDisponibilidad(items)
+    /** Prepara cada producto como un lote. Si falta algún ingrediente para el total, no descuenta nada. */
+    fun descontar(cantidades: Map<Producto, Int>) {
+        val faltantes: List<IngredienteFaltante> = evaluarDisponibilidad(cantidades)
         if (faltantes.isNotEmpty()) throw ErrorNegocio(mensajeFaltantes(faltantes))
-        for (item in items) {
-            prepararLote(item.producto.ingredientes, item.cantidad)
+        for ((producto, unidades) in cantidades) {
+            prepararLote(producto.ingredientes, unidades)
         }
     }
 
-    /** Devuelve al inventario los ingredientes de los items (por ejemplo, al cancelar un pedido). */
-    fun devolver(items: List<ItemPedido>) {
-        for ((ingrediente, cantidad) in necesarios(items)) {
+    /** Devuelve al inventario los ingredientes de los productos (por ejemplo, al cancelar un pedido). */
+    fun devolver(cantidades: Map<Producto, Int>) {
+        for ((ingrediente, cantidad) in necesarios(cantidades)) {
             stockRepositorio.actualizar(ingrediente, stockDe(ingrediente) + cantidad)
         }
     }

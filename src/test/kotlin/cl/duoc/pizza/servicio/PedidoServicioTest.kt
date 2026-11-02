@@ -3,7 +3,7 @@ package cl.duoc.pizza.servicio
 import cl.duoc.pizza.modelo.Categoria
 import cl.duoc.pizza.modelo.EstadoPedido
 import cl.duoc.pizza.modelo.Producto
-import cl.duoc.pizza.modelo.Usuario
+import cl.duoc.pizza.modelo.Cliente
 import cl.duoc.pizza.repositorio.PedidoRepositorio
 import cl.duoc.pizza.repositorio.ProductoRepositorio
 import cl.duoc.pizza.repositorio.StockRepositorio
@@ -18,7 +18,7 @@ import cl.duoc.pizza.modelo.Pedido
 import kotlin.test.assertSame
 
 class PedidoServicioTest {
-    private val usuario = Usuario(1, "Ana", "ana@duoc.cl", "hash", "912345678", "Av. Siempre Viva 123")
+    private val usuario = Cliente(1, "Ana", "ana@duoc.cl", "hash", "912345678", "Av. Siempre Viva 123")
     private val pizza = Producto(1, "Margarita", Categoria.PIZZA, 9990, ingredientes = mapOf("Masa" to 1, "Queso" to 1))
     private val bebida = Producto(2, "Agua", Categoria.BEBIDA, 1290)
     private val inventario = InventarioServicio(
@@ -79,7 +79,7 @@ class PedidoServicioTest {
 
     @Test
     fun `no confirma si otro pedido se llevo los ingredientes`() {
-        val otro = usuario.copy(id = 2, email = "luis@duoc.cl")
+        val otro = Cliente(2, "Luis", "luis@duoc.cl", "hash", "987654321", "Los Aromos 45")
         val pedidoAna = servicio.pedidoActual(usuario)
         val pedidoLuis = servicio.pedidoActual(otro)
         servicio.agregarProducto(pedidoAna, pizza, 2)

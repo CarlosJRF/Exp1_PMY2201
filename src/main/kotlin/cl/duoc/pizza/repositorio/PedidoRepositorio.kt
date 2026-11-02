@@ -19,8 +19,8 @@ class PedidoRepositorio {
         pedidos.remove(id)
     }
 
-    fun listarPorUsuario(idUsuario: Int): List<Pedido> =
-        listar().filter { it.usuario.id == idUsuario }
+    fun listarPorCliente(idCliente: Int): List<Pedido> =
+        listar().filter { it.cliente.id == idCliente }
 
     fun listar(): List<Pedido> = pedidos.values.sortedBy { it.id }
 }
