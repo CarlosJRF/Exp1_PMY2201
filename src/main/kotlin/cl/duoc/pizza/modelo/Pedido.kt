@@ -60,8 +60,13 @@ class Pedido(
     val estaVacio: Boolean
         get() = _cantidades.isEmpty()
 
-    /** Subtotal, descuento, IVA y total del pedido (ver la función calcularTotal de Totales.kt). */
-    fun calcularTotal(): Totales = calcularTotal(subtotal, cantidadPizzas)
+    /** ¿La fecha del pedido cae en el rango de la promoción de temporada? */
+    val enPromocion: Boolean
+        get() = Promociones.vigente(fecha.toLocalDate())
+
+    /** Subtotal, descuentos, IVA y total del pedido (ver la función calcularTotal de Totales.kt). */
+    fun calcularTotal(): Totales =
+        calcularTotal(subtotal, cantidadPizzas, Promociones.descuentoDe(_cantidades, fecha.toLocalDate()))
 
     /** Cambia el estado respetando el orden: carrito -> En preparación -> Listo -> En camino. */
     fun cambiarEstado(nuevo: EstadoPedido) {

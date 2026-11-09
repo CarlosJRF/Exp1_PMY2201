@@ -1,9 +1,9 @@
 package cl.duoc.pizza.servicio
 
-import cl.duoc.pizza.modelo.Categoria
 import cl.duoc.pizza.modelo.EstadoPedido
 import cl.duoc.pizza.modelo.Pedido
 import cl.duoc.pizza.modelo.Producto
+import cl.duoc.pizza.modelo.Pizza
 import cl.duoc.pizza.modelo.Repartidor
 import cl.duoc.pizza.modelo.Cliente
 import kotlin.test.Test
@@ -20,7 +20,7 @@ class RepartoServicioTest {
     private val reparto = RepartoServicio(listOf(lejos, cerca))
 
     private fun pedidoListo(id: Int): Pedido = Pedido(id, usuario).apply {
-        agregar(Producto(1, "Margarita", Categoria.PIZZA, 9990), 1)
+        agregar(Pizza(1, "Margarita", 9990), 1)
         cambiarEstado(EstadoPedido.EN_PREPARACION)
         cambiarEstado(EstadoPedido.LISTO)
     }
@@ -39,7 +39,7 @@ class RepartoServicioTest {
 
     @Test
     fun `solo asigna pedidos listos`() {
-        val pedido = Pedido(1, usuario).apply { agregar(Producto(1, "Margarita", Categoria.PIZZA, 9990), 1) }
+        val pedido = Pedido(1, usuario).apply { agregar(Pizza(1, "Margarita", 9990), 1) }
         pedido.cambiarEstado(EstadoPedido.EN_PREPARACION)
         assertFailsWith<ErrorNegocio> { reparto.asignar(pedido) }
     }

@@ -47,7 +47,7 @@ class RepositoriosTest {
 
     @Test
     fun `los ingredientes de la pizza escalan con el tamano`() {
-        val familiar = DatosIniciales.productos.first { it.nombre == "Margarita" && it.tamano == Tamano.FAMILIAR }
+        val familiar = DatosIniciales.productos.first { it.nombre == "Margarita Familiar" && it.tamano == Tamano.FAMILIAR }
         assertEquals(3, familiar.ingredientes["Masa"])
     }
 

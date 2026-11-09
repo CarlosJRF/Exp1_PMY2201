@@ -19,7 +19,7 @@ class UsuarioServicioTest {
         nombre: String = "Ana Pérez",
         email: String = "ana@duoc.cl",
         password: String = "secreto",
-        telefono: String = "912345678",
+        telefono: String = "9123456789",
         direccion: String = "Av. Siempre Viva 123",
     ) = servicio.registrar(nombre, email, password, telefono, direccion)
 
@@ -28,6 +28,7 @@ class UsuarioServicioTest {
         val usuario = registrarAna(email = "  Ana@Duoc.cl ")
 
         assertEquals("ana@duoc.cl", usuario.email)
+        assertEquals("+56 (912) 345-6789", usuario.telefono)
         assertNotEquals("secreto", usuario.passwordHash)
         assertTrue(usuario.passwordHash.startsWith("\$argon2id\$"))
         assertTrue(usuario.validarPassword("secreto"))

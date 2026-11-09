@@ -10,22 +10,18 @@ class UsuarioServicio(private val repositorio: UsuarioRepositorio) {
 
     companion object {
         const val LARGO_MINIMO_PASSWORD = 6
-        private val FORMATO_EMAIL: Regex = Regex("^[\\w.+-]+@[\\w-]+(\\.[\\w-]+)+$")
         private val HASH_DE_RELLENO: String = Seguridad.hashPassword("relleno-sin-usuario")
-        private val FORMATO_TELEFONO: Regex = Regex("^\\+?\\d{8,12}$")
     }
 
     /** Email en minúsculas si el formato es válido; si no, [ContactoPredeterminado.EMAIL]. */
     fun validarEmail(email: String): String {
         val normalizado: String = email.trim().lowercase()
-        return if (FORMATO_EMAIL.matches(normalizado)) normalizado else ContactoPredeterminado.EMAIL
+        return if (Validaciones.esEmailValido(normalizado)) normalizado else ContactoPredeterminado.EMAIL
     }
 
-    /** Teléfono de 8 a 12 dígitos (con + opcional); si no, [ContactoPredeterminado.TELEFONO]. */
-    fun validarTelefono(telefono: String): String {
-        val limpio: String = telefono.trim()
-        return if (FORMATO_TELEFONO.matches(limpio)) limpio else ContactoPredeterminado.TELEFONO
-    }
+    /** Teléfono con formato `+XX (XXX) XXX-XXXX`; si no se puede formatear, [ContactoPredeterminado.TELEFONO]. */
+    fun validarTelefono(telefono: String): String =
+        Validaciones.formatearTelefono(telefono) ?: ContactoPredeterminado.TELEFONO
 
     /**
      * Registra un cliente. Si el email o el teléfono no tienen un formato válido no se rechaza el registro:

@@ -23,7 +23,7 @@ object ReporteDiario {
         for (pedido in pedidos) {
             val pizzas: Map<Producto, Int> = pedido.cantidades.filterKeys { it.categoria == Categoria.PIZZA }
             val detallePizzas: String =
-                if (pizzas.isEmpty()) "(sin pizzas)" else pizzas.entries.joinToString { "${it.value} x ${it.key.nombreCompleto}" }
+                if (pizzas.isEmpty()) "(sin pizzas)" else pizzas.entries.joinToString { "${it.value} x ${it.key.nombre}" }
             appendLine("#${pedido.id}  Cliente: ${pedido.cliente.nombre}")
             appendLine("    Pizzas: $detallePizzas")
             appendLine("    Total: ${Formato.precio(pedido.total)}  Estado: ${pedido.estadoVisible}")

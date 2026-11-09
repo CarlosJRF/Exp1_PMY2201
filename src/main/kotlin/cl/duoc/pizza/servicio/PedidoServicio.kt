@@ -6,17 +6,21 @@ import cl.duoc.pizza.modelo.Pedido
 import cl.duoc.pizza.modelo.Producto
 import cl.duoc.pizza.repositorio.PedidoRepositorio
 import cl.duoc.pizza.util.Formato
+import java.time.Clock
 import java.time.LocalDate
+import java.time.LocalDateTime
 
+/** [reloj] da la fecha de los pedidos; en los tests se fija para no depender del día (promociones por fecha). */
 class PedidoServicio(
     private val pedidoRepositorio: PedidoRepositorio,
     private val inventario: InventarioServicio,
+    private val reloj: Clock = Clock.systemDefaultZone(),
 ) {
 
     /** Devuelve el carrito (pedido sin confirmar) del usuario, o crea uno nuevo si no tiene. */
     fun pedidoActual(cliente: Cliente): Pedido =
         pedidosDe(cliente).find { it.estado == null }
-            ?: Pedido(pedidoRepositorio.siguienteId(), cliente).also { pedidoRepositorio.guardar(it) }
+            ?: Pedido(pedidoRepositorio.siguienteId(), cliente, LocalDateTime.now(reloj)).also { pedidoRepositorio.guardar(it) }
 
     /** Unidades que todavía se pueden agregar: lo que alcanza con los ingredientes que no usa ya el pedido. */
     fun disponibleParaAgregar(pedido: Pedido, producto: Producto): Int =
@@ -27,12 +31,12 @@ class PedidoServicio(
         if (cantidad <= disponibleParaAgregar(pedido, producto)) return
         val faltantes: List<IngredienteFaltante> =
             inventario.evaluarDisponibilidad(pedido.cantidades + (producto to pedido.cantidadDe(producto) + cantidad))
-        throw ErrorNegocio("No se puede agregar $cantidad x ${producto.nombreCompleto}.\n${inventario.mensajeFaltantes(faltantes)}")
+        throw ErrorNegocio("No se puede agregar $cantidad x ${producto.nombre}.\n${inventario.mensajeFaltantes(faltantes)}")
     }
 
     fun agregarProducto(pedido: Pedido, producto: Producto, cantidad: Int) {
         validarCarrito(pedido)
-        if (cantidad <= 0) throw ErrorNegocio("La cantidad debe ser mayor a 0")
+        Validaciones.validarCantidad(cantidad)
         verificarDisponibilidad(pedido, producto, cantidad)
         pedido.agregar(producto, cantidad)
     }
@@ -98,7 +102,7 @@ class PedidoServicio(
     fun todosLosPedidos(): List<Pedido> = pedidoRepositorio.listar().filter { it.estado != null }
 
     /** Pedidos confirmados en la fecha indicada, como arreglo para el reporte diario. */
-    fun pedidosDelDia(fecha: LocalDate = LocalDate.now()): Array<Pedido> =
+    fun pedidosDelDia(fecha: LocalDate = LocalDate.now(reloj)): Array<Pedido> =
         todosLosPedidos().filter { it.fecha.toLocalDate() == fecha }.toTypedArray()
 
     private fun validarCarrito(pedido: Pedido) {

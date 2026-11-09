@@ -1,18 +1,20 @@
 package cl.duoc.pizza.modelo
 
+import java.time.LocalDateTime
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class PedidoTest {
+    private val FUERA_DE_PROMOCION: LocalDateTime = LocalDateTime.of(2026, 10, 15, 12, 0)
     private val usuario = Cliente(1, "Ana", "ana@duoc.cl", "secreto", "912345678", "Av. Siempre Viva 123")
-    private val margarita = Producto(1, "Margarita", Categoria.PIZZA, 8990, Tamano.MEDIANA)
-    private val bebida = Producto(2, "Coca-Cola 1.5L", Categoria.BEBIDA, 2490)
+    private val margarita = Pizza(1, "Margarita", 8990, Tamano.MEDIANA)
+    private val bebida = Bebida(2, "Coca-Cola 1.5L", 2490)
 
     @Test
     fun `total suma los subtotales de los items mas IVA`() {
-        val pedido = Pedido(1, usuario)
+        val pedido = Pedido(1, usuario, FUERA_DE_PROMOCION)
         pedido.agregar(margarita, 2)
         pedido.agregar(bebida, 1)
 
@@ -22,19 +24,19 @@ class PedidoTest {
 
     @Test
     fun `agregar el mismo producto acumula la cantidad`() {
-        val pedido = Pedido(1, usuario)
+        val pedido = Pedido(1, usuario, FUERA_DE_PROMOCION)
         pedido.agregar(margarita, 1)
         pedido.agregar(margarita, 2)
 
         assertEquals(1, pedido.cantidades.size)
-        assertEquals(listOf(margarita), pedido.productos)
-        assertEquals(mapOf(margarita to 3), pedido.cantidades)
+        assertEquals<List<Producto>>(listOf(margarita), pedido.productos)
+        assertEquals<Map<Producto, Int>>(mapOf(margarita to 3), pedido.cantidades)
         assertEquals(3, pedido.cantidadDe(margarita))
     }
 
     @Test
     fun `quitar toda la cantidad elimina el producto`() {
-        val pedido = Pedido(1, usuario)
+        val pedido = Pedido(1, usuario, FUERA_DE_PROMOCION)
         pedido.agregar(margarita, 2)
         pedido.quitar(margarita, 1)
         assertEquals(1, pedido.cantidadDe(margarita))
@@ -45,14 +47,14 @@ class PedidoTest {
 
     @Test
     fun `no permite cantidades invalidas`() {
-        val pedido = Pedido(1, usuario)
+        val pedido = Pedido(1, usuario, FUERA_DE_PROMOCION)
         assertFailsWith<IllegalArgumentException> { pedido.agregar(margarita, 0) }
         assertFailsWith<IllegalArgumentException> { pedido.quitar(bebida, 1) }
     }
 
     @Test
     fun `las notas, el repartidor y la entrega solo cambian con sus validaciones`() {
-        val pedido = Pedido(1, usuario)
+        val pedido = Pedido(1, usuario, FUERA_DE_PROMOCION)
         pedido.agregar(margarita, 1)
         pedido.registrarNotas("  ")
         assertEquals(null, pedido.notas)
@@ -74,7 +76,7 @@ class PedidoTest {
 
     @Test
     fun `el estado cambia solo en orden`() {
-        val pedido = Pedido(1, usuario)
+        val pedido = Pedido(1, usuario, FUERA_DE_PROMOCION)
         assertFailsWith<IllegalArgumentException> { pedido.cambiarEstado(EstadoPedido.LISTO) }
         pedido.cambiarEstado(EstadoPedido.EN_PREPARACION)
         pedido.cambiarEstado(EstadoPedido.LISTO)
@@ -85,14 +87,14 @@ class PedidoTest {
 
     @Test
     fun `detallar producto incluye precio e ingredientes de las pizzas`() {
-        val hawaiana = Producto(3, "Hawaiana", Categoria.PIZZA, 11490, Tamano.MEDIANA, mapOf("Masa" to 2, "Piña" to 2))
+        val hawaiana = Pizza(3, "Hawaiana", 11490, Tamano.MEDIANA, mapOf("Masa" to 2, "Piña" to 2))
         assertEquals("Hawaiana Mediana ($11.490) · Pizza · Ingredientes: Masa, Piña", hawaiana.detallarProducto())
         assertEquals("Coca-Cola 1.5L ($2.490) · Bebida", bebida.detallarProducto())
     }
 
     @Test
-    fun `nombre completo incluye el tamano`() {
-        assertEquals("Margarita Mediana", margarita.nombreCompleto)
-        assertEquals("Coca-Cola 1.5L", bebida.nombreCompleto)
+    fun `el nombre de la pizza incluye el tamano`() {
+        assertEquals("Margarita Mediana", margarita.nombre)
+        assertEquals("Coca-Cola 1.5L", bebida.nombre)
     }
 }

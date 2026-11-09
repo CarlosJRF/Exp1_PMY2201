@@ -8,6 +8,7 @@ import cl.duoc.pizza.servicio.InventarioServicio
 import cl.duoc.pizza.servicio.PedidoServicio
 import cl.duoc.pizza.servicio.RepartoServicio
 import cl.duoc.pizza.servicio.UsuarioServicio
+import cl.duoc.pizza.servicio.Validaciones
 
 class MenuPrincipal(
     private val consola: Consola,
@@ -30,13 +31,14 @@ class MenuPrincipal(
 
     private fun registrar() {
         consola.titulo("Registro de usuario")
-        val cliente: Cliente = usuarioServicio.registrar(
-            nombre = consola.leerTexto("Nombre"),
-            email = consola.leerTexto("Email"),
-            password = consola.leerPassword("Contraseña (mín. ${UsuarioServicio.LARGO_MINIMO_PASSWORD} caracteres)"),
-            telefono = consola.leerTexto("Teléfono"),
-            direccion = consola.leerTexto("Dirección"),
-        )
+        val nombre: String = consola.leerTexto("Nombre")
+        val email: String = consola.leerValido("Email", Validaciones.MENSAJE_EMAIL) { texto ->
+            texto.takeIf { Validaciones.esEmailValido(it) }
+        }
+        val password: String = consola.leerPassword("Contraseña (mín. ${UsuarioServicio.LARGO_MINIMO_PASSWORD} caracteres)")
+        val telefono: String = consola.leerValido("Teléfono", Validaciones.MENSAJE_TELEFONO) { Validaciones.formatearTelefono(it) }
+        consola.mensaje("Teléfono registrado como $telefono")
+        val cliente: Cliente = usuarioServicio.registrar(nombre, email, password, telefono, consola.leerTexto("Dirección"))
         consola.exito("Usuario registrado. ¡Hola, ${cliente.nombre}!")
         if (cliente.email == ContactoPredeterminado.EMAIL) {
             consola.error("El email no era válido: se registró como ${cliente.email} (úsalo para iniciar sesión)")

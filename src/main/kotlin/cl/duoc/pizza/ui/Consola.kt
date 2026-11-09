@@ -61,6 +61,21 @@ class Consola {
         }
     }
 
+    /**
+     * Pide un texto hasta que [convertir] lo acepte (devuelve no null); si lo rechaza, muestra [mensajeError]
+     * y vuelve a pedirlo. Devuelve el valor convertido.
+     */
+    fun leerValido(etiqueta: String, mensajeError: String, convertir: (String) -> String?): String {
+        while (true) {
+            val valor: String? = convertir(leerTexto(etiqueta))
+            if (valor != null) return valor
+            error(mensajeError)
+        }
+    }
+
+    /** Lee un número dentro de [rango] (por ejemplo 1..100); fuera del rango explica el error y lo vuelve a pedir. */
+    fun leerEnRango(etiqueta: String, rango: IntRange): Int = leerEntero(etiqueta, rango.first, rango.last)
+
     /** Lee un texto opcional: si se deja vacío devuelve null. */
     fun leerOpcional(etiqueta: String): String? {
         print("$etiqueta: ")

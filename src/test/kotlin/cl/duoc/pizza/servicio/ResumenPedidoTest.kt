@@ -1,9 +1,9 @@
 package cl.duoc.pizza.servicio
 
-import cl.duoc.pizza.modelo.Categoria
 import cl.duoc.pizza.modelo.EstadoPedido
 import cl.duoc.pizza.modelo.Pedido
 import cl.duoc.pizza.modelo.Producto
+import cl.duoc.pizza.modelo.Pizza
 import cl.duoc.pizza.modelo.Tamano
 import cl.duoc.pizza.modelo.Cliente
 import java.time.LocalDateTime
@@ -12,8 +12,9 @@ import kotlin.test.assertContains
 import kotlin.test.assertEquals
 
 class ResumenPedidoTest {
+    private val FUERA_DE_PROMOCION: LocalDateTime = LocalDateTime.of(2026, 10, 15, 12, 0)
     private val usuario = Cliente(1, "Ana", "ana@duoc.cl", "hash", "912345678", "Av. Siempre Viva 123")
-    private val margarita = Producto(1, "Margarita", Categoria.PIZZA, 9990, Tamano.MEDIANA)
+    private val margarita = Pizza(1, "Margarita", 9990, Tamano.MEDIANA)
 
     @Test
     fun `el resumen incluye datos del pedido, del cliente y del producto`() {
@@ -42,7 +43,7 @@ class ResumenPedidoTest {
 
     @Test
     fun `el resumen muestra el descuento aplicado`() {
-        val pedido = Pedido(8, usuario)
+        val pedido = Pedido(8, usuario, FUERA_DE_PROMOCION)
         pedido.agregar(margarita, 4)
 
         val resumen = ResumenPedido.generar(pedido)
@@ -56,7 +57,7 @@ class ResumenPedidoTest {
 
     @Test
     fun `el resumen muestra el estado del pedido confirmado`() {
-        val pedido = Pedido(10, usuario)
+        val pedido = Pedido(10, usuario, FUERA_DE_PROMOCION)
         pedido.agregar(margarita, 1)
         pedido.cambiarEstado(EstadoPedido.EN_PREPARACION)
         assertContains(ResumenPedido.generar(pedido), "Estado:    En preparación")
@@ -68,9 +69,9 @@ class ResumenPedidoTest {
 
     @Test
     fun `todas las lineas caben en el ancho del resumen`() {
-        val pedido = Pedido(11, usuario)
+        val pedido = Pedido(11, usuario, FUERA_DE_PROMOCION)
         pedido.agregar(margarita, 12)
-        pedido.agregar(Producto(2, "Napolitana", Categoria.PIZZA, 14990, Tamano.FAMILIAR), 2)
+        pedido.agregar(Pizza(2, "Napolitana", 14990, Tamano.FAMILIAR), 2)
 
         val anchoMaximo: Int = ResumenPedido.generar(pedido).lines().maxOf { it.length }
         assertEquals(52, anchoMaximo)
@@ -78,7 +79,7 @@ class ResumenPedidoTest {
 
     @Test
     fun `el resumen muestra las notas del cliente`() {
-        val pedido = Pedido(9, usuario)
+        val pedido = Pedido(9, usuario, FUERA_DE_PROMOCION)
         pedido.agregar(margarita, 1)
         pedido.registrarNotas("Sin cebolla, tocar timbre")
 

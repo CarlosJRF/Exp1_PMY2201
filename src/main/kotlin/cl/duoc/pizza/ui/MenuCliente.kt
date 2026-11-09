@@ -9,6 +9,7 @@ import cl.duoc.pizza.servicio.ErrorNegocio
 import cl.duoc.pizza.servicio.InventarioServicio
 import cl.duoc.pizza.servicio.PedidoServicio
 import cl.duoc.pizza.servicio.ResumenPedido
+import cl.duoc.pizza.servicio.Validaciones
 import cl.duoc.pizza.util.Formato
 
 class MenuCliente(
@@ -17,10 +18,6 @@ class MenuCliente(
     private val inventario: InventarioServicio,
     private val pedidoServicio: PedidoServicio,
 ) {
-
-    companion object {
-        private const val CANTIDAD_MAXIMA = 50
-    }
 
     private val opciones: List<String> = listOf(
         "Ver catálogo",
@@ -54,7 +51,7 @@ class MenuCliente(
         consola.titulo("Catálogo")
         consola.mensaje(Vistas.catalogo(inventario))
         consola.mensaje("")
-        consola.mensaje(Vistas.promociones())
+        consola.mensaje(Vistas.promociones(inventario))
     }
 
     private fun agregarProducto() {
@@ -67,12 +64,17 @@ class MenuCliente(
         pedidoServicio.verificarDisponibilidad(pedido, producto, 1)
         val disponible: Int = pedidoServicio.disponibleParaAgregar(pedido, producto)
         consola.mensaje("Disponible para agregar: $disponible")
-        val cantidad: Int = consola.leerEntero("Cantidad", 1, minOf(CANTIDAD_MAXIMA, disponible))
+        val rango: IntRange = Validaciones.CANTIDAD_PERMITIDA
+        var cantidad: Int = consola.leerEnRango("Cantidad (${rango.first}-${rango.last})", rango)
+        while (cantidad > disponible) {
+            consola.error("Solo hay ingredientes para $disponible unidad(es) de ${producto.nombre}")
+            cantidad = consola.leerEnRango("Cantidad (${rango.first}-${rango.last})", rango)
+        }
 
         pedidoServicio.agregarProducto(pedido, producto, cantidad)
-        consola.exito("Agregado: $cantidad x ${producto.nombreCompleto}. ${totalConDescuento(pedido)}")
+        consola.exito("Agregado: $cantidad x ${producto.nombre}. ${totalConDescuento(pedido)}")
         if (inventario.tieneStockBajo(producto)) {
-            consola.mensaje("Aviso: ${producto.nombreCompleto} tiene poco stock (${inventario.disponibilidad(producto)})")
+            consola.mensaje("Aviso: ${producto.nombre} tiene poco stock (${inventario.disponibilidad(producto)})")
         }
     }
 
@@ -83,7 +85,7 @@ class MenuCliente(
         consola.titulo("Quitar producto")
         val enPedido: List<Producto> = pedido.cantidades.keys.toList()
         enPedido.forEachIndexed { indice, producto ->
-            consola.mensaje("${indice + 1}. ${pedido.cantidadDe(producto)} x ${producto.nombreCompleto}")
+            consola.mensaje("${indice + 1}. ${pedido.cantidadDe(producto)} x ${producto.nombre}")
         }
         val numero: Int = consola.leerEntero("Producto a quitar (0 para volver)", 0, enPedido.size)
         if (numero == 0) return
@@ -91,14 +93,15 @@ class MenuCliente(
         val cantidad: Int = consola.leerEntero("Cantidad a quitar", 1, pedido.cantidadDe(producto))
 
         pedidoServicio.quitarProducto(pedido, producto, cantidad)
-        consola.exito("Quitado: $cantidad x ${producto.nombreCompleto}. ${totalConDescuento(pedido)}")
+        consola.exito("Quitado: $cantidad x ${producto.nombre}. ${totalConDescuento(pedido)}")
     }
 
-    /** "Total: $X" (con IVA) y, si corresponde, el descuento aplicado. */
+    /** "Total: $X" (con IVA) y, si corresponde, los descuentos aplicados (por cantidad de pizzas y promoción). */
     private fun totalConDescuento(pedido: Pedido): String {
         val totales: Totales = pedido.calcularTotal()
+        val rebajas: Int = totales.descuento + totales.promocion
         val total: String = "Total con IVA: ${Formato.precio(totales.total)}"
-        return if (totales.descuento == 0) total else "$total (incluye ${Formato.precio(totales.descuento)} de descuento)"
+        return if (rebajas == 0) total else "$total (incluye ${Formato.precio(rebajas)} de descuento)"
     }
 
     private fun verPedidoActual() {

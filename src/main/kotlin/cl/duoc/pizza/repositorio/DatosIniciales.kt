@@ -1,7 +1,10 @@
 package cl.duoc.pizza.repositorio
 
 import cl.duoc.pizza.modelo.Administrador
-import cl.duoc.pizza.modelo.Categoria
+import cl.duoc.pizza.modelo.Acompanamiento
+import cl.duoc.pizza.modelo.Bebida
+import cl.duoc.pizza.modelo.Combo
+import cl.duoc.pizza.modelo.Pizza
 import cl.duoc.pizza.modelo.Producto
 import cl.duoc.pizza.modelo.Repartidor
 import cl.duoc.pizza.modelo.Tamano
@@ -23,10 +26,10 @@ object DatosIniciales {
     private val napolitana: Map<String, Int> = base + mapOf("Tomate" to 1, "Aceitunas" to 1, "Orégano" to 1)
     private val hawaiana: Map<String, Int> = base + mapOf("Jamón" to 1, "Piña" to 1)
 
-    private fun pizza(id: Int, nombre: String, precio: Int, tamano: Tamano, receta: Map<String, Int>): Producto =
-        Producto(id, nombre, Categoria.PIZZA, precio, tamano, receta.mapValues { it.value * tamano.porciones })
+    private fun pizza(id: Int, nombre: String, precio: Int, tamano: Tamano, receta: Map<String, Int>): Pizza =
+        Pizza(id, nombre, precio, tamano, receta.mapValues { it.value * tamano.porciones })
 
-    val productos: List<Producto> = listOf(
+    private val pizzas: List<Pizza> = listOf(
         pizza(1, "Margarita", 5990, Tamano.PERSONAL, margarita),
         pizza(2, "Margarita", 9990, Tamano.MEDIANA, margarita),
         pizza(3, "Margarita", 13990, Tamano.FAMILIAR, margarita),
@@ -39,12 +42,23 @@ object DatosIniciales {
         pizza(10, "Hawaiana", 6990, Tamano.PERSONAL, hawaiana),
         pizza(11, "Hawaiana", 11490, Tamano.MEDIANA, hawaiana),
         pizza(12, "Hawaiana", 15490, Tamano.FAMILIAR, hawaiana),
-        Producto(13, "Coca-Cola 1.5L", Categoria.BEBIDA, 2490),
-        Producto(14, "Sprite 1.5L", Categoria.BEBIDA, 2490),
-        Producto(15, "Agua mineral 500ml", Categoria.BEBIDA, 1290),
-        Producto(16, "Palitos de ajo", Categoria.ACOMPANAMIENTO, 3490),
-        Producto(17, "Papas fritas", Categoria.ACOMPANAMIENTO, 2990),
     )
+    private val cocaCola: Bebida = Bebida(13, "Coca-Cola 1.5L", 2490)
+    private val agua: Bebida = Bebida(15, "Agua mineral 500ml", 1290)
+    private val palitos: Acompanamiento = Acompanamiento(16, "Palitos de ajo", 3490)
+
+    private val combos: List<Combo> = listOf(
+        Combo(18, "Combo Personal", 6490, mapOf(pizzas[0] to 1, agua to 1)),
+        Combo(19, "Combo Familiar", 18990, mapOf(pizzas[5] to 1, cocaCola to 1, palitos to 1)),
+    )
+
+    val productos: List<Producto> = pizzas + listOf(
+        cocaCola,
+        Bebida(14, "Sprite 1.5L", 2490),
+        agua,
+        palitos,
+        Acompanamiento(17, "Papas fritas", 2990),
+    ) + combos
 
     val repartidores: List<Repartidor> = listOf(
         Repartidor(1, "Pedro Soto", "+56911111111", "pedro@duocpizza.cl", 2.5),

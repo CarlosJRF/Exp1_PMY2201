@@ -4,6 +4,7 @@ import cl.duoc.pizza.modelo.PIZZAS_PARA_DESCUENTO
 import cl.duoc.pizza.modelo.PORCENTAJE_DESCUENTO
 import cl.duoc.pizza.modelo.PORCENTAJE_IVA
 import cl.duoc.pizza.modelo.Pedido
+import cl.duoc.pizza.modelo.Promociones
 import cl.duoc.pizza.modelo.Totales
 import cl.duoc.pizza.util.Formato
 
@@ -43,7 +44,7 @@ object ResumenPedido {
             for ((producto, cantidad) in pedido.cantidades) {
                 appendLine(
                     fila(
-                        producto.nombreCompleto.take(ANCHO_PRODUCTO),
+                        producto.nombre.take(ANCHO_PRODUCTO),
                         Formato.precio(producto.precio),
                         "$cantidad",
                         Formato.precio(producto.precio * cantidad),
@@ -61,6 +62,12 @@ object ResumenPedido {
             "Descuento (no aplica)"
         }
         appendLine(alinear(descuento, Formato.precio(-totales.descuento)))
+        val promocion: String = when {
+            totales.promocion > 0 -> "Promoción ${Promociones.NOMBRE}"
+            pedido.enPromocion -> "Promoción (sin productos en promo)"
+            else -> "Promoción (fuera de periodo)"
+        }
+        appendLine(alinear(promocion, Formato.precio(-totales.promocion)))
         appendLine(alinear("IVA $PORCENTAJE_IVA%", Formato.precio(totales.impuesto)))
         appendLine(alinear("TOTAL", Formato.precio(totales.total)))
         appendLine(linea)

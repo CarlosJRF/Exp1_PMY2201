@@ -1,13 +1,17 @@
 package cl.duoc.pizza.servicio
 
-import cl.duoc.pizza.modelo.Categoria
 import cl.duoc.pizza.modelo.EstadoPedido
 import cl.duoc.pizza.modelo.Producto
+import cl.duoc.pizza.modelo.Bebida
+import cl.duoc.pizza.modelo.Pizza
 import cl.duoc.pizza.modelo.Cliente
 import cl.duoc.pizza.repositorio.PedidoRepositorio
 import cl.duoc.pizza.repositorio.ProductoRepositorio
 import cl.duoc.pizza.repositorio.StockRepositorio
+import java.time.Clock
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
@@ -19,13 +23,15 @@ import kotlin.test.assertSame
 
 class PedidoServicioTest {
     private val usuario = Cliente(1, "Ana", "ana@duoc.cl", "hash", "912345678", "Av. Siempre Viva 123")
-    private val pizza = Producto(1, "Margarita", Categoria.PIZZA, 9990, ingredientes = mapOf("Masa" to 1, "Queso" to 1))
-    private val bebida = Producto(2, "Agua", Categoria.BEBIDA, 1290)
+    private val pizza = Pizza(1, "Margarita", 9990, ingredientes = mapOf("Masa" to 1, "Queso" to 1))
+    private val bebida = Bebida(2, "Agua", 1290)
+    /** Reloj fijo fuera del periodo de promoción, para que los totales no dependan del día. */
+    private val reloj: Clock = Clock.fixed(Instant.parse("2026-10-15T15:00:00Z"), ZoneId.of("America/Santiago"))
     private val inventario = InventarioServicio(
         ProductoRepositorio(listOf(pizza, bebida)),
         StockRepositorio(mapOf("Masa" to 10, "Queso" to 3, "Agua" to 10)),
     )
-    private val servicio = PedidoServicio(PedidoRepositorio(), inventario)
+    private val servicio = PedidoServicio(PedidoRepositorio(), inventario, reloj)
 
     @Test
     fun `el carrito se reutiliza mientras no se confirme`() {
@@ -148,7 +154,7 @@ class PedidoServicioTest {
 
         val hoy: Array<Pedido> = servicio.pedidosDelDia()
         assertEquals(listOf(pedido.id), hoy.map { it.id })
-        assertEquals(0, servicio.pedidosDelDia(LocalDate.now().minusDays(1)).size)
+        assertEquals(0, servicio.pedidosDelDia(LocalDate.now(reloj).minusDays(1)).size)
     }
 
     @Test

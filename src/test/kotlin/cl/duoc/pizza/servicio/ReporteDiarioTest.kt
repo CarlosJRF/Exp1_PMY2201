@@ -1,12 +1,14 @@
 package cl.duoc.pizza.servicio
 
-import cl.duoc.pizza.modelo.Categoria
 import cl.duoc.pizza.modelo.EstadoPedido
 import cl.duoc.pizza.modelo.Pedido
 import cl.duoc.pizza.modelo.Producto
+import cl.duoc.pizza.modelo.Bebida
+import cl.duoc.pizza.modelo.Pizza
 import cl.duoc.pizza.modelo.Tamano
 import cl.duoc.pizza.modelo.Cliente
 import java.time.LocalDate
+import java.time.LocalDateTime
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
@@ -14,11 +16,11 @@ import kotlin.test.assertEquals
 class ReporteDiarioTest {
     private val ana = Cliente(1, "Ana", "ana@duoc.cl", "hash", "912345678", "Av. Siempre Viva 123")
     private val luis = Cliente(2, "Luis", "luis@duoc.cl", "hash", "987654321", "Los Aromos 45")
-    private val margarita = Producto(1, "Margarita", Categoria.PIZZA, 9990, Tamano.MEDIANA)
-    private val bebida = Producto(2, "Agua", Categoria.BEBIDA, 1290)
+    private val margarita = Pizza(1, "Margarita", 9990, Tamano.MEDIANA)
+    private val bebida = Bebida(2, "Agua", 1290)
 
     private fun pedido(id: Int, usuario: Cliente, estado: EstadoPedido): Pedido =
-        Pedido(id, usuario).apply {
+        Pedido(id, usuario, LocalDateTime.of(2026, 10, 15, 12, 0)).apply {
             agregar(margarita, 1)
             agregar(bebida, 1)
             val camino: List<EstadoPedido> = EstadoPedido.entries.takeWhile { it != estado } + estado
