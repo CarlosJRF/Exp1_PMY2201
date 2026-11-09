@@ -30,6 +30,8 @@ class MenuCliente(
     )
 
     fun mostrar() {
+        val (nombre: String, correo: String, telefono: String) = cliente
+        consola.mensaje("Sesión de $nombre · $correo · $telefono")
         while (true) {
             val opcion: Int = consola.menu("Menú cliente — ${cliente.nombre}", opciones, "Cerrar sesión")
             consola.intentar {

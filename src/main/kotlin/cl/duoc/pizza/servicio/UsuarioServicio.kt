@@ -37,14 +37,19 @@ class UsuarioServicio(private val repositorio: UsuarioRepositorio) {
         val emailValidado: String = validarEmail(email)
 
         if (nombre.isBlank()) throw ErrorNegocio("El nombre es obligatorio")
-        if (repositorio.buscarPorEmail(emailValidado) != null) {
-            val mensaje: String = if (emailValidado == ContactoPredeterminado.EMAIL) {
-                "El email no tiene un formato válido y ya hay un usuario con $ContactoPredeterminado.EMAIL; ingresa un email correcto"
-            } else {
-                "Ya existe un usuario con ese email"
-            }
-            throw ErrorNegocio(mensaje)
+        val emailOcupado: Boolean = repositorio.buscarPorEmail(emailValidado) != null
+        if (emailOcupado && emailValidado == ContactoPredeterminado.EMAIL) {
+            throw ErrorNegocio(
+                "El email no tiene un formato válido y ya hay un usuario con ${ContactoPredeterminado.EMAIL}; ingresa un email correcto",
+            )
         }
+        // Cliente provisorio solo para comparar: equals usa nombre y email (ver Cliente.equals).
+        val candidato: Cliente = Cliente(0, nombre.trim(), emailValidado, passwordHash = "", telefono = "", direccion = "")
+        if (candidato in repositorio.listar()) {
+            throw ErrorNegocio("Ya existe un cliente registrado con el nombre ${candidato.nombre} y el email ${candidato.email}")
+        }
+        // Otra persona con el mismo email: no se permite porque el email es el usuario para iniciar sesión.
+        if (emailOcupado) throw ErrorNegocio("Ya existe un usuario con ese email")
         if (password.length < LARGO_MINIMO_PASSWORD) {
             throw ErrorNegocio("La contraseña debe tener al menos $LARGO_MINIMO_PASSWORD caracteres")
         }

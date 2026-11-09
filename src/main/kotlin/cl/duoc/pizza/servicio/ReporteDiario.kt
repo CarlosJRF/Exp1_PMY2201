@@ -1,6 +1,7 @@
 package cl.duoc.pizza.servicio
 
 import cl.duoc.pizza.modelo.Categoria
+import cl.duoc.pizza.modelo.Cliente
 import cl.duoc.pizza.modelo.EstadoPedido
 import cl.duoc.pizza.modelo.Pedido
 import cl.duoc.pizza.modelo.Producto
@@ -21,12 +22,13 @@ object ReporteDiario {
     fun generar(pedidos: Array<Pedido>, fecha: LocalDate = LocalDate.now()): String = buildString {
         appendLine("Reporte del día ${Formato.dia(fecha)}: ${pedidos.size} pedido(s)")
         for (pedido in pedidos) {
-            val pizzas: Map<Producto, Int> = pedido.cantidades.filterKeys { it.categoria == Categoria.PIZZA }
+            val (cliente: Cliente, productos: Map<Producto, Int>, total: Int) = pedido
+            val pizzas: Map<Producto, Int> = productos.filterKeys { it.categoria == Categoria.PIZZA }
             val detallePizzas: String =
                 if (pizzas.isEmpty()) "(sin pizzas)" else pizzas.entries.joinToString { "${it.value} x ${it.key.nombre}" }
-            appendLine("#${pedido.id}  Cliente: ${pedido.cliente.nombre}")
+            appendLine("#${pedido.id}  Cliente: ${cliente.nombre}")
             appendLine("    Pizzas: $detallePizzas")
-            appendLine("    Total: ${Formato.precio(pedido.total)}  Estado: ${pedido.estadoVisible}")
+            appendLine("    Total: ${Formato.precio(total)}  Estado: ${pedido.estadoVisible}")
         }
         val completados: List<Pedido> = completados(pedidos)
         val pendientes: List<Pedido> = pendientes(pedidos)

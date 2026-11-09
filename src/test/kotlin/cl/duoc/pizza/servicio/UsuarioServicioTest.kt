@@ -35,9 +35,17 @@ class UsuarioServicioTest {
     }
 
     @Test
+    fun `no permite registrar un cliente igual a uno existente`() {
+        registrarAna()
+        val error = assertFailsWith<ErrorNegocio> { registrarAna(nombre = "ANA PÉREZ", telefono = "5698765432") }
+        assertEquals("Ya existe un cliente registrado con el nombre ANA PÉREZ y el email ana@duoc.cl", error.message)
+        assertEquals(2, servicio.listar().size) // admin + Ana
+    }
+
+    @Test
     fun `no permite registrar un email repetido`() {
         registrarAna()
-        val error = assertFailsWith<ErrorNegocio> { registrarAna(email = "ANA@duoc.cl") }
+        val error = assertFailsWith<ErrorNegocio> { registrarAna(nombre = "Otra Persona", email = "ANA@duoc.cl") }
         assertEquals("Ya existe un usuario con ese email", error.message)
     }
 
@@ -55,7 +63,10 @@ class UsuarioServicioTest {
         assertEquals(ContactoPredeterminado.TELEFONO, ana.telefono)
 
         val error = assertFailsWith<ErrorNegocio> { registrarAna(email = "otro-invalido") }
-        assertContains(error.message!!, "ingresa un email correcto")
+        assertEquals(
+            "El email no tiene un formato válido y ya hay un usuario con correo@invalido.com; ingresa un email correcto",
+            error.message,
+        )
     }
 
     @Test

@@ -105,6 +105,23 @@ class Pedido(
         entregado = true
     }
 
+    /**
+     * Sobrecarga de `+`: combina dos pedidos del mismo cliente en un carrito nuevo, sumando las unidades
+     * de cada producto. Conserva el id y la fecha del primero; el total (con descuentos) se recalcula.
+     */
+    operator fun plus(otro: Pedido): Pedido {
+        require(cliente == otro.cliente) { "Solo se pueden combinar pedidos del mismo cliente" }
+        val combinado: Pedido = Pedido(id, cliente, fecha)
+        for ((producto, unidades) in _cantidades) combinado.agregar(producto, unidades)
+        for ((producto, unidades) in otro._cantidades) combinado.agregar(producto, unidades)
+        return combinado
+    }
+
+    /** Desestructuración: `val (cliente, productos, total) = pedido`. */
+    operator fun component1(): Cliente = cliente
+    operator fun component2(): Map<Producto, Int> = cantidades
+    operator fun component3(): Int = total
+
     fun cantidadDe(producto: Producto): Int = _cantidades[producto] ?: 0
 
     fun agregar(producto: Producto, cantidad: Int) {

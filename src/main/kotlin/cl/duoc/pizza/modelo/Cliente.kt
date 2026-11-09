@@ -1,8 +1,12 @@
 package cl.duoc.pizza.modelo
 
 import cl.duoc.pizza.util.Seguridad
+import java.util.Objects
 
-/** Cliente registrado: inicia sesión y hace pedidos que se despachan a su dirección. */
+/**
+ * Cliente registrado: inicia sesión y hace pedidos que se despachan a su dirección.
+ * Dos clientes son iguales si tienen el mismo nombre y email (sin distinguir mayúsculas), aunque su id sea distinto.
+ */
 class Cliente(
     id: Int,
     nombre: String,
@@ -20,4 +24,17 @@ class Cliente(
     override fun descripcion(): String = "Cliente: ${super.descripcion()} · $direccion"
 
     override fun validarPassword(password: String): Boolean = Seguridad.verificarPassword(password, passwordHash)
+
+    /** Desestructuración: `val (nombre, email, telefono) = cliente`. */
+    operator fun component1(): String = nombre
+    operator fun component2(): String = email
+    operator fun component3(): String = telefono
+
+    override fun equals(other: Any?): Boolean =
+        other is Cliente &&
+            nombre.trim().equals(other.nombre.trim(), ignoreCase = true) &&
+            email.trim().equals(other.email.trim(), ignoreCase = true)
+
+    /** Coherente con [equals]: los mismos atributos clave, normalizados igual. */
+    override fun hashCode(): Int = Objects.hash(nombre.trim().lowercase(), email.trim().lowercase())
 }
