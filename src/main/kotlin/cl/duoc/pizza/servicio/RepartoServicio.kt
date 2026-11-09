@@ -13,7 +13,7 @@ class RepartoServicio(private val repartidores: List<Repartidor>) {
         if (pedido.estado != EstadoPedido.LISTO) {
             throw ErrorNegocio("Solo se pueden asignar pedidos listos (el #${pedido.id} está ${pedido.estadoVisible.lowercase()})")
         }
-        val repartidor: Repartidor = repartidores.sortedBy { it.distanciaKm }.find { it.disponible }
+        val repartidor: Repartidor = repartidores.filter { it.disponible }.minByOrNull { it.distanciaKm }
             ?: throw ErrorNegocio("No hay repartidores disponibles en este momento")
 
         repartidor.tomarPedido(pedido)

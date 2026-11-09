@@ -5,16 +5,20 @@ import cl.duoc.pizza.modelo.PIZZAS_PARA_DESCUENTO
 import cl.duoc.pizza.modelo.PORCENTAJE_DESCUENTO
 import cl.duoc.pizza.modelo.PORCENTAJE_IVA
 import cl.duoc.pizza.modelo.Pedido
+import cl.duoc.pizza.modelo.Producto
 import cl.duoc.pizza.servicio.InventarioServicio
 import cl.duoc.pizza.util.Formato
 
 /** Textos que se muestran en más de un menú. */
 object Vistas {
 
+    /** Catálogo agrupado por categoría. Se consulta una sola vez y solo se muestran las categorías que tienen productos. */
     fun catalogo(inventario: InventarioServicio): String = buildString {
-        Categoria.entries.forEach { categoria ->
+        val catalogo: List<Producto> = inventario.catalogo()
+        val categorias: Set<Categoria> = catalogo.map { it.categoria }.toSortedSet()
+        for (categoria in categorias) {
             appendLine("-- ${categoria.nombreVisible} --")
-            inventario.catalogo().filter { it.categoria == categoria }.forEach { producto ->
+            catalogo.filter { it.categoria == categoria }.forEach { producto ->
                 val id: String = producto.id.toString().padStart(2)
                 val precio: String = Formato.precio(producto.precio).padStart(8)
                 appendLine("[$id] ${producto.nombreCompleto.padEnd(26)} $precio  (${inventario.disponibilidad(producto)})")

@@ -52,6 +52,16 @@ class RepositoriosTest {
     }
 
     @Test
+    fun `aplicar cambios es todo o nada`() {
+        val stock = StockRepositorio(mapOf("Masa" to 5, "Queso" to 1))
+        assertFailsWith<IllegalArgumentException> { stock.aplicar(mapOf("Masa" to -2, "Queso" to -3)) }
+        assertEquals(mapOf("Masa" to 5, "Queso" to 1), stock.listar())
+
+        stock.aplicar(mapOf("Masa" to -2, "Queso" to -1))
+        assertEquals(mapOf("Masa" to 3, "Queso" to 0), stock.listar())
+    }
+
+    @Test
     fun `stock no acepta cantidades negativas`() {
         val stock = StockRepositorio(mapOf("Masa" to 5))
         stock.actualizar("Masa", 0)

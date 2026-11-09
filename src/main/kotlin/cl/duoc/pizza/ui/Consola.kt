@@ -1,6 +1,8 @@
 package cl.duoc.pizza.ui
 
+import cl.duoc.pizza.modelo.Pedido
 import cl.duoc.pizza.servicio.ErrorNegocio
+import cl.duoc.pizza.servicio.Notificador
 import java.io.Console
 
 /** Se lanza cuando la entrada estándar se cierra (por ejemplo, Ctrl+D o fin de un archivo). */
@@ -19,6 +21,11 @@ class Consola {
     fun exito(texto: String) = println("✔ $texto")
 
     fun error(texto: String) = println("✖ $texto")
+
+    /** Muestra la notificación del pedido solo si el cliente tiene un email válido (formato común a todos los menús). */
+    fun notificar(pedido: Pedido) {
+        Notificador.notificar(pedido)?.let { println(it) }
+    }
 
     fun leerTexto(etiqueta: String): String {
         while (true) {

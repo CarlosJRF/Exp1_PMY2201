@@ -27,7 +27,8 @@ class PedidoTest {
         pedido.agregar(margarita, 2)
 
         assertEquals(1, pedido.cantidades.size)
-        assertEquals(3, pedido.productos.size)
+        assertEquals(listOf(margarita), pedido.productos)
+        assertEquals(mapOf(margarita to 3), pedido.cantidades)
         assertEquals(3, pedido.cantidadDe(margarita))
     }
 
@@ -47,6 +48,28 @@ class PedidoTest {
         val pedido = Pedido(1, usuario)
         assertFailsWith<IllegalArgumentException> { pedido.agregar(margarita, 0) }
         assertFailsWith<IllegalArgumentException> { pedido.quitar(bebida, 1) }
+    }
+
+    @Test
+    fun `las notas, el repartidor y la entrega solo cambian con sus validaciones`() {
+        val pedido = Pedido(1, usuario)
+        pedido.agregar(margarita, 1)
+        pedido.registrarNotas("  ")
+        assertEquals(null, pedido.notas)
+        assertFailsWith<IllegalArgumentException> { pedido.registrarNotas("x".repeat(Pedido.LARGO_MAXIMO_NOTAS + 1)) }
+
+        val repartidor = Repartidor(1, "Pedro", "+56911111111", "pedro@duocpizza.cl", 2.0)
+        assertFailsWith<IllegalArgumentException> { pedido.asignarRepartidor(repartidor) }
+        assertFailsWith<IllegalArgumentException> { pedido.marcarEntregado() }
+
+        pedido.cambiarEstado(EstadoPedido.EN_PREPARACION)
+        assertFailsWith<IllegalArgumentException> { pedido.registrarNotas("tarde") }
+        pedido.cambiarEstado(EstadoPedido.LISTO)
+        pedido.asignarRepartidor(repartidor)
+        assertEquals(EstadoPedido.EN_CAMINO, pedido.estado)
+        pedido.marcarEntregado()
+        assertTrue(pedido.entregado)
+        assertFailsWith<IllegalArgumentException> { pedido.marcarEntregado() }
     }
 
     @Test

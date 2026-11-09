@@ -13,14 +13,9 @@ class Cliente(
     val direccion: String,
 ) : Usuario(id, nombre, telefono, email) {
 
-    companion object {
-        const val EMAIL_PREDETERMINADO = "correo@invalido.com"
-        const val TELEFONO_PREDETERMINADO = "(000) 000-0000"
-    }
-
     /** Email al que se envían notificaciones, o null si se registró con el valor predeterminado. */
     val emailNotificaciones: String?
-        get() = if (email == EMAIL_PREDETERMINADO) null else email
+        get() = if (email == ContactoPredeterminado.EMAIL) null else email
 
     override fun descripcion(): String = "Cliente: ${super.descripcion()} · $direccion"
 

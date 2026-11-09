@@ -7,7 +7,6 @@ import cl.duoc.pizza.modelo.Producto
 import cl.duoc.pizza.modelo.Totales
 import cl.duoc.pizza.servicio.ErrorNegocio
 import cl.duoc.pizza.servicio.InventarioServicio
-import cl.duoc.pizza.servicio.Notificador
 import cl.duoc.pizza.servicio.PedidoServicio
 import cl.duoc.pizza.servicio.ResumenPedido
 import cl.duoc.pizza.util.Formato
@@ -123,7 +122,7 @@ class MenuCliente(
         }
         consola.exito("Pedido #${pedido.id} confirmado. ¡Gracias por tu compra!")
         consola.mensaje(ResumenPedido.generar(pedido))
-        Notificador.notificar(pedido)?.let { consola.mensaje(it) }
+        consola.notificar(pedido)
     }
 
     private fun verMisPedidos() {

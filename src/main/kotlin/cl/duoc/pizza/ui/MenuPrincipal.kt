@@ -2,6 +2,7 @@ package cl.duoc.pizza.ui
 
 import cl.duoc.pizza.modelo.Administrador
 import cl.duoc.pizza.modelo.Cliente
+import cl.duoc.pizza.modelo.ContactoPredeterminado
 import cl.duoc.pizza.modelo.Usuario
 import cl.duoc.pizza.servicio.InventarioServicio
 import cl.duoc.pizza.servicio.PedidoServicio
@@ -37,10 +38,10 @@ class MenuPrincipal(
             direccion = consola.leerTexto("Dirección"),
         )
         consola.exito("Usuario registrado. ¡Hola, ${cliente.nombre}!")
-        if (cliente.email == UsuarioServicio.EMAIL_PREDETERMINADO) {
+        if (cliente.email == ContactoPredeterminado.EMAIL) {
             consola.error("El email no era válido: se registró como ${cliente.email} (úsalo para iniciar sesión)")
         }
-        if (cliente.telefono == UsuarioServicio.TELEFONO_PREDETERMINADO) {
+        if (cliente.telefono == ContactoPredeterminado.TELEFONO) {
             consola.error("El teléfono no era válido: se registró como ${cliente.telefono}")
         }
         abrirSesion(cliente)

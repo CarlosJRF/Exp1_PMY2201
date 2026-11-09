@@ -18,16 +18,14 @@ class Repartidor(
     /** Toma un pedido listo: el pedido sale en camino y el repartidor queda ocupado. */
     fun tomarPedido(pedido: Pedido) {
         require(disponible) { "$nombre no está disponible" }
-        pedido.cambiarEstado(EstadoPedido.EN_CAMINO)
-        pedido.repartidor = this
+        pedido.asignarRepartidor(this)
         disponible = false
     }
 
     /** Entrega un pedido que lleva este repartidor y queda disponible otra vez. */
     fun entregarPedido(pedido: Pedido) {
         require(pedido.repartidor === this) { "El pedido #${pedido.id} no lo lleva $nombre" }
-        require(!pedido.entregado) { "El pedido #${pedido.id} ya fue entregado" }
-        pedido.entregado = true
+        pedido.marcarEntregado()
         disponible = true
     }
 }

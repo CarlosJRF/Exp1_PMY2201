@@ -5,7 +5,6 @@ import cl.duoc.pizza.modelo.Repartidor
 import cl.duoc.pizza.modelo.Usuario
 import cl.duoc.pizza.servicio.ErrorNegocio
 import cl.duoc.pizza.servicio.InventarioServicio
-import cl.duoc.pizza.servicio.Notificador
 import cl.duoc.pizza.servicio.PedidoServicio
 import cl.duoc.pizza.servicio.RepartoServicio
 import cl.duoc.pizza.servicio.ReporteDiario
@@ -57,10 +56,12 @@ class MenuAdmin(
         consola.titulo("Inventario de ingredientes")
         consola.mensaje(Vistas.ingredientes(inventario))
         val stockBajo: List<String> = inventario.ingredientesConStockBajo()
+        val agotados: Set<String> = inventario.ingredientesAgotados()
         if (stockBajo.isNotEmpty()) {
             consola.mensaje("")
             consola.error("Stock bajo: ${stockBajo.joinToString()}")
         }
+        if (agotados.isNotEmpty()) consola.error("Agotados: ${agotados.joinToString()}")
     }
 
     private fun reponerIngrediente() {
@@ -100,7 +101,7 @@ class MenuAdmin(
         val pedido: Pedido = elegirPedido() ?: return
         pedidoServicio.marcarListo(pedido)
         consola.exito("Pedido #${pedido.id}: ${pedido.estadoVisible}")
-        notificar(pedido)
+        consola.notificar(pedido)
     }
 
     private fun asignarRepartidor() {
@@ -109,14 +110,14 @@ class MenuAdmin(
         val pedido: Pedido = elegirPedido() ?: return
         val repartidor: Repartidor = reparto.asignar(pedido)
         consola.exito("Pedido #${pedido.id} asignado a ${repartidor.nombre} (${repartidor.distanciaKm} km): ${pedido.estadoVisible}")
-        notificar(pedido)
+        consola.notificar(pedido)
     }
 
     private fun registrarEntrega() {
         val pedido: Pedido = elegirPedido() ?: return
         val repartidor: Repartidor = reparto.entregar(pedido)
         consola.exito("Pedido #${pedido.id} entregado por ${repartidor.nombre}, que queda disponible")
-        notificar(pedido)
+        consola.notificar(pedido)
     }
 
     /** Lista clientes, administradores y repartidores; cada uno se describe a su manera (polimorfismo). */
@@ -126,11 +127,6 @@ class MenuAdmin(
         for (persona in personas) {
             consola.mensaje(persona.descripcion())
         }
-    }
-
-    /** Muestra la notificación solo si el cliente tiene un email válido. */
-    private fun notificar(pedido: Pedido) {
-        Notificador.notificar(pedido)?.let { consola.mensaje(it) }
     }
 
     /** Muestra los pedidos y devuelve el elegido, o null si el usuario vuelve. */

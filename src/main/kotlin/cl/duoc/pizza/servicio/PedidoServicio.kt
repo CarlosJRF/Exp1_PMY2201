@@ -45,7 +45,7 @@ class PedidoServicio(
     }
 
     /**
-     * Evalúa los ingredientes, los descuenta y deja el pedido en preparación. Si falta alguno, no descuenta nada.
+     * Descuenta los ingredientes (una sola verificación, todo o nada) y deja el pedido en preparación.
      * Las [notas] en blanco se guardan como null.
      */
     fun confirmar(pedido: Pedido, notas: String? = null) {
@@ -58,13 +58,13 @@ class PedidoServicio(
         }
         if (total <= 0) throw ErrorNegocio("Costo de pedido no válido (${Formato.precio(total)})")
 
-        val faltantes: List<IngredienteFaltante> = inventario.evaluarDisponibilidad(pedido.cantidades)
-        if (faltantes.isNotEmpty()) {
-            throw ErrorNegocio("No se pudo confirmar el pedido #${pedido.id}.\n${inventario.mensajeFaltantes(faltantes)}")
-        }
+        pedido.registrarNotas(notas)
 
-        inventario.descontar(pedido.cantidades)
-        pedido.notas = notas?.trim()?.ifBlank { null }
+        try {
+            inventario.descontar(pedido.cantidades)
+        } catch (e: StockInsuficiente) {
+            throw ErrorNegocio("No se pudo confirmar el pedido #${pedido.id}.\n${e.message}")
+        }
         pedido.cambiarEstado(EstadoPedido.EN_PREPARACION)
     }
 

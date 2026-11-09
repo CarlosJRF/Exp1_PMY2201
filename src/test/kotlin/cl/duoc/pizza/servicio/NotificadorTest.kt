@@ -2,6 +2,7 @@ package cl.duoc.pizza.servicio
 
 import cl.duoc.pizza.modelo.Categoria
 import cl.duoc.pizza.modelo.Cliente
+import cl.duoc.pizza.modelo.ContactoPredeterminado
 import cl.duoc.pizza.modelo.EstadoPedido
 import cl.duoc.pizza.modelo.Pedido
 import cl.duoc.pizza.modelo.Producto
@@ -23,6 +24,6 @@ class NotificadorTest {
 
     @Test
     fun `no notifica si el cliente quedo con el email predeterminado`() {
-        assertNull(Notificador.notificar(pedidoDe(Cliente.EMAIL_PREDETERMINADO)))
+        assertNull(Notificador.notificar(pedidoDe(ContactoPredeterminado.EMAIL)))
     }
 }

@@ -8,8 +8,14 @@ import cl.duoc.pizza.modelo.Totales
 import cl.duoc.pizza.util.Formato
 
 object ResumenPedido {
+    /** Ancho total de cada línea del resumen. */
     private const val ANCHO = 52
+
+    /** Columnas de la tabla de productos: el subtotal ocupa lo que queda del ancho. */
     private const val ANCHO_PRODUCTO = 24
+    private const val ANCHO_PRECIO = 9
+    private const val ANCHO_CANTIDAD = 6
+    private const val ANCHO_SUBTOTAL = ANCHO - ANCHO_PRODUCTO - ANCHO_PRECIO - ANCHO_CANTIDAD
 
     /**
      * Genera el texto del resumen: datos del pedido (fecha y estado), cliente, productos
@@ -18,7 +24,7 @@ object ResumenPedido {
     fun generar(pedido: Pedido): String = buildString {
         val linea: String = "-".repeat(ANCHO)
         appendLine("=".repeat(ANCHO))
-        appendLine("DuocPizza · Pedido #${pedido.id}".padStart((ANCHO + 26) / 2))
+        appendLine(centrar("DuocPizza · Pedido #${pedido.id}"))
         appendLine("=".repeat(ANCHO))
         appendLine("Fecha:     ${Formato.fecha(pedido.fecha)}")
         appendLine("Estado:    ${pedido.estadoVisible}")
@@ -63,7 +69,11 @@ object ResumenPedido {
 
     /** Fila de la tabla de productos: nombre a la izquierda y columnas numéricas alineadas a la derecha. */
     private fun fila(producto: String, precio: String, cantidad: String, subtotal: String): String =
-        "${producto.padEnd(ANCHO_PRODUCTO)}${precio.padStart(9)}${cantidad.padStart(6)}${subtotal.padStart(ANCHO - ANCHO_PRODUCTO - 15)}"
+        producto.padEnd(ANCHO_PRODUCTO) + precio.padStart(ANCHO_PRECIO) +
+            cantidad.padStart(ANCHO_CANTIDAD) + subtotal.padStart(ANCHO_SUBTOTAL)
+
+    /** Centra el texto en el ancho del resumen. */
+    private fun centrar(texto: String): String = texto.padStart((ANCHO + texto.length) / 2)
 
     /** Texto a la izquierda y monto a la derecha dentro del ancho del resumen. */
     private fun alinear(izquierda: String, derecha: String): String =

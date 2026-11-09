@@ -1,6 +1,7 @@
 package cl.duoc.pizza.servicio
 
 import cl.duoc.pizza.modelo.Cliente
+import cl.duoc.pizza.modelo.ContactoPredeterminado
 import cl.duoc.pizza.modelo.Usuario
 import cl.duoc.pizza.repositorio.UsuarioRepositorio
 import cl.duoc.pizza.util.Seguridad
@@ -9,23 +10,21 @@ class UsuarioServicio(private val repositorio: UsuarioRepositorio) {
 
     companion object {
         const val LARGO_MINIMO_PASSWORD = 6
-        const val EMAIL_PREDETERMINADO = Cliente.EMAIL_PREDETERMINADO
-        const val TELEFONO_PREDETERMINADO = Cliente.TELEFONO_PREDETERMINADO
         private val FORMATO_EMAIL: Regex = Regex("^[\\w.+-]+@[\\w-]+(\\.[\\w-]+)+$")
         private val HASH_DE_RELLENO: String = Seguridad.hashPassword("relleno-sin-usuario")
         private val FORMATO_TELEFONO: Regex = Regex("^\\+?\\d{8,12}$")
     }
 
-    /** Email en minúsculas si el formato es válido; si no, [EMAIL_PREDETERMINADO]. */
+    /** Email en minúsculas si el formato es válido; si no, [ContactoPredeterminado.EMAIL]. */
     fun validarEmail(email: String): String {
         val normalizado: String = email.trim().lowercase()
-        return if (FORMATO_EMAIL.matches(normalizado)) normalizado else EMAIL_PREDETERMINADO
+        return if (FORMATO_EMAIL.matches(normalizado)) normalizado else ContactoPredeterminado.EMAIL
     }
 
-    /** Teléfono de 8 a 12 dígitos (con + opcional); si no, [TELEFONO_PREDETERMINADO]. */
+    /** Teléfono de 8 a 12 dígitos (con + opcional); si no, [ContactoPredeterminado.TELEFONO]. */
     fun validarTelefono(telefono: String): String {
         val limpio: String = telefono.trim()
-        return if (FORMATO_TELEFONO.matches(limpio)) limpio else TELEFONO_PREDETERMINADO
+        return if (FORMATO_TELEFONO.matches(limpio)) limpio else ContactoPredeterminado.TELEFONO
     }
 
     /**
@@ -43,8 +42,8 @@ class UsuarioServicio(private val repositorio: UsuarioRepositorio) {
 
         if (nombre.isBlank()) throw ErrorNegocio("El nombre es obligatorio")
         if (repositorio.buscarPorEmail(emailValidado) != null) {
-            val mensaje: String = if (emailValidado == EMAIL_PREDETERMINADO) {
-                "El email no tiene un formato válido y ya hay un usuario con $EMAIL_PREDETERMINADO; ingresa un email correcto"
+            val mensaje: String = if (emailValidado == ContactoPredeterminado.EMAIL) {
+                "El email no tiene un formato válido y ya hay un usuario con $ContactoPredeterminado.EMAIL; ingresa un email correcto"
             } else {
                 "Ya existe un usuario con ese email"
             }

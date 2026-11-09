@@ -83,8 +83,17 @@ class InventarioServicioTest {
     }
 
     @Test
-    fun `detecta ingredientes con stock bajo`() {
+    fun `detecta ingredientes con stock bajo y agotados`() {
         assertEquals(listOf("Masa", "Agua"), inventario.ingredientesConStockBajo())
+        assertEquals(setOf("Agua"), inventario.ingredientesAgotados())
+    }
+
+    @Test
+    fun `si falta un ingrediente no se descuenta ninguno`() {
+        val error = assertFailsWith<StockInsuficiente> { inventario.descontar(mapOf(pizza to 2, bebida to 1)) }
+        assertEquals(listOf("Agua"), error.faltantes.map { it.nombre })
+        assertEquals(5, inventario.stockDe("Masa"))
+        assertEquals(6, inventario.stockDe("Queso"))
     }
 
     @Test

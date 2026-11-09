@@ -1,6 +1,7 @@
 package cl.duoc.pizza.servicio
 
 import cl.duoc.pizza.modelo.Administrador
+import cl.duoc.pizza.modelo.ContactoPredeterminado
 import cl.duoc.pizza.repositorio.DatosIniciales
 import cl.duoc.pizza.repositorio.UsuarioRepositorio
 import kotlin.test.Test
@@ -49,8 +50,8 @@ class UsuarioServicioTest {
     @Test
     fun `email y telefono invalidos se reemplazan por valores predeterminados`() {
         val ana = registrarAna(email = "ana-sin-arroba", telefono = "abc")
-        assertEquals(UsuarioServicio.EMAIL_PREDETERMINADO, ana.email)
-        assertEquals(UsuarioServicio.TELEFONO_PREDETERMINADO, ana.telefono)
+        assertEquals(ContactoPredeterminado.EMAIL, ana.email)
+        assertEquals(ContactoPredeterminado.TELEFONO, ana.telefono)
 
         val error = assertFailsWith<ErrorNegocio> { registrarAna(email = "otro-invalido") }
         assertContains(error.message!!, "ingresa un email correcto")

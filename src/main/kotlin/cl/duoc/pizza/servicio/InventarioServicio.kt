@@ -14,6 +14,9 @@ class InventarioServicio(
         const val UMBRAL_STOCK_BAJO = 5
     }
 
+    /** Comprobar y descontar ocurren dentro del mismo bloque sincronizado: nadie cambia el stock entre medio. */
+    private val cerrojo: Any = Any()
+
     fun catalogo(): List<Producto> = productoRepositorio.listar()
 
     fun buscarProducto(id: Int): Producto =
@@ -26,6 +29,9 @@ class InventarioServicio(
 
     fun ingredientesConStockBajo(): List<String> =
         ingredientes().filter { it.value <= UMBRAL_STOCK_BAJO }.keys.toList()
+
+    /** Ingredientes sin unidades; un Set porque cada ingrediente aparece una sola vez. */
+    fun ingredientesAgotados(): Set<String> = ingredientes().filterValues { it == 0 }.keys
 
     /** Cantidad de cada ingrediente para preparar un lote de [cantidadPizzas], según lo que usa una pizza. */
     fun cantidadParaLote(ingredientes: Map<String, Int>, cantidadPizzas: Int): Map<String, Int> =
@@ -111,28 +117,22 @@ class InventarioServicio(
     fun prepararLote(ingredientes: Map<String, Int>, cantidadPizzas: Int): Map<String, Int> {
         if (cantidadPizzas <= 0) throw ErrorNegocio("La cantidad de pizzas debe ser mayor a 0")
         val necesarios: Map<String, Int> = cantidadParaLote(ingredientes, cantidadPizzas)
-        val faltantes: List<IngredienteFaltante> = faltantesDe(necesarios)
-        if (faltantes.isNotEmpty()) throw ErrorNegocio(mensajeFaltantes(faltantes))
-
-        for ((ingrediente, necesario) in necesarios) {
-            stockRepositorio.actualizar(ingrediente, stockDe(ingrediente) - necesario)
-        }
+        descontarIngredientes(necesarios)
         return necesarios
     }
 
-    /** Prepara cada producto como un lote. Si falta algún ingrediente para el total, no descuenta nada. */
+    /**
+     * Verifica y descuenta en un solo paso los ingredientes de todos los productos.
+     * Lanza [StockInsuficiente] con los faltantes si no alcanza algo; en ese caso no descuenta nada.
+     */
     fun descontar(cantidades: Map<Producto, Int>) {
-        val faltantes: List<IngredienteFaltante> = evaluarDisponibilidad(cantidades)
-        if (faltantes.isNotEmpty()) throw ErrorNegocio(mensajeFaltantes(faltantes))
-        for ((producto, unidades) in cantidades) {
-            prepararLote(producto.ingredientes, unidades)
-        }
+        descontarIngredientes(necesarios(cantidades))
     }
 
     /** Devuelve al inventario los ingredientes de los productos (por ejemplo, al cancelar un pedido). */
     fun devolver(cantidades: Map<Producto, Int>) {
-        for ((ingrediente, cantidad) in necesarios(cantidades)) {
-            stockRepositorio.actualizar(ingrediente, stockDe(ingrediente) + cantidad)
+        synchronized(cerrojo) {
+            stockRepositorio.aplicar(necesarios(cantidades))
         }
     }
 
@@ -140,6 +140,17 @@ class InventarioServicio(
         if (cantidad < 0) throw ErrorNegocio("La cantidad no puede ser negativa ($cantidad): el inventario solo se repone")
         if (cantidad == 0) throw ErrorNegocio("La cantidad debe ser mayor a 0")
         if (ingrediente !in ingredientes()) throw ErrorNegocio("No existe el ingrediente $ingrediente")
-        stockRepositorio.actualizar(ingrediente, stockDe(ingrediente) + cantidad)
+        synchronized(cerrojo) {
+            stockRepositorio.aplicar(mapOf(ingrediente to cantidad))
+        }
+    }
+
+    /** Criterio único de disponibilidad: se evalúa una vez y, si alcanza todo, se descuenta todo junto. */
+    private fun descontarIngredientes(necesarios: Map<String, Int>) {
+        synchronized(cerrojo) {
+            val faltantes: List<IngredienteFaltante> = faltantesDe(necesarios)
+            if (faltantes.isNotEmpty()) throw StockInsuficiente(faltantes, mensajeFaltantes(faltantes))
+            stockRepositorio.aplicar(necesarios.mapValues { (_, cantidad) -> -cantidad })
+        }
     }
 }
