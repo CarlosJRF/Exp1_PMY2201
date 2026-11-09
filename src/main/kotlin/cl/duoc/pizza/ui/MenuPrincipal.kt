@@ -7,8 +7,13 @@ import cl.duoc.pizza.modelo.Usuario
 import cl.duoc.pizza.servicio.InventarioServicio
 import cl.duoc.pizza.servicio.PedidoServicio
 import cl.duoc.pizza.servicio.RepartoServicio
+import cl.duoc.pizza.servicio.ResumenKotlinAvanzado
 import cl.duoc.pizza.servicio.UsuarioServicio
 import cl.duoc.pizza.servicio.Validaciones
+import java.io.File
+import java.io.IOException
+
+private const val ARCHIVO_RESUMEN = "resumen-kotlin-avanzado.txt"
 
 class MenuPrincipal(
     private val consola: Consola,
@@ -21,9 +26,11 @@ class MenuPrincipal(
     fun iniciar() {
         consola.mensaje("🍕 Bienvenido a DuocPizza 🍕")
         while (true) {
-            when (consola.menu("Menú principal", listOf("Registrarse", "Iniciar sesión"), "Salir")) {
+            val opciones: List<String> = listOf("Registrarse", "Iniciar sesión", "Ver resumen de Kotlin avanzado")
+            when (consola.menu("Menú principal", opciones, "Salir")) {
                 1 -> consola.intentar { registrar() }
                 2 -> consola.intentar { iniciarSesion() }
+                3 -> verResumenKotlinAvanzado()
                 0 -> return
             }
         }
@@ -47,6 +54,18 @@ class MenuPrincipal(
             consola.error("El teléfono no era válido: se registró como ${cliente.telefono}")
         }
         abrirSesion(cliente)
+    }
+
+    /** Muestra el resumen de los conceptos avanzados y lo guarda en [ARCHIVO_RESUMEN]. */
+    private fun verResumenKotlinAvanzado() {
+        val resumen: String = ResumenKotlinAvanzado.generar()
+        consola.mensaje(resumen)
+        try {
+            File(ARCHIVO_RESUMEN).writeText(resumen)
+            consola.exito("Resumen guardado en $ARCHIVO_RESUMEN")
+        } catch (e: IOException) {
+            consola.error("No se pudo guardar el resumen: ${e.message}")
+        }
     }
 
     private fun iniciarSesion() {
