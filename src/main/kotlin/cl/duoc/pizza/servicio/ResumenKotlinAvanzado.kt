@@ -54,8 +54,8 @@ object ResumenKotlinAvanzado {
         for (email in listOf("ana.perez@duoc.cl", "ana.perez@duoc", "ana perez@duoc.cl")) {
             appendLine(if (Validaciones.esEmailValido(email)) "  ✔ $email" else "  ✖ $email → se pide reingresarlo")
         }
-        appendLine("Teléfonos (formato +XX (XXX) XXX-XXXX):")
-        for (telefono in listOf("9123456789", "56 987-654-3210", "12345")) {
+        appendLine("Teléfonos (+56 9 XXXX-XXXX o +XX (XXX) XXX-XXXX):")
+        for (telefono in listOf("9 1234 5678", "+56 9 8765 4321", "9123456789", "12345")) {
             val resultado: String = Validaciones.formatearTelefono(telefono) ?: "✖ no válido, se pide reingresarlo"
             appendLine("  \"$telefono\" → $resultado")
         }

@@ -8,7 +8,7 @@ pensado para evolucionar más adelante a una app móvil.
 - **Clientes:** registro e inicio de sesión. Las contraseñas se guardan con **Argon2id**
   (Bouncy Castle, sal aleatoria y formato PHC); nunca se guarda la contraseña original.
   El email se valida con una expresión regular (`nombre@dominio.com`) y el teléfono se formatea como
-  `+XX (XXX) XXX-XXXX`; si alguno no es válido, la consola explica el error y lo vuelve a pedir.
+  `+56 9 1234-5678` (celular chileno de 9 dígitos, con o sin 56) o `+XX (XXX) XXX-XXXX`; si alguno no es válido, la consola explica el error y lo vuelve a pedir.
   No se puede registrar un cliente igual a otro (mismo nombre y email).
 - **Catálogo:** pizzas en 3 tamaños, combos, bebidas y acompañamientos; cada producto puede describirse
   con su precio e ingredientes. No admite productos repetidos (mismo nombre y categoría).

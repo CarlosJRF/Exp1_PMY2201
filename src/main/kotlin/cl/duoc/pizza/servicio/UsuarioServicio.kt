@@ -19,7 +19,7 @@ class UsuarioServicio(private val repositorio: UsuarioRepositorio) {
         return if (Validaciones.esEmailValido(normalizado)) normalizado else ContactoPredeterminado.EMAIL
     }
 
-    /** Teléfono con formato `+XX (XXX) XXX-XXXX`; si no se puede formatear, [ContactoPredeterminado.TELEFONO]. */
+    /** Teléfono formateado por [Validaciones.formatearTelefono]; si no se puede, [ContactoPredeterminado.TELEFONO]. */
     fun validarTelefono(telefono: String): String =
         Validaciones.formatearTelefono(telefono) ?: ContactoPredeterminado.TELEFONO
 

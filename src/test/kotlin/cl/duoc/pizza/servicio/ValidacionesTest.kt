@@ -32,8 +32,16 @@ class ValidacionesTest {
     }
 
     @Test
+    fun `acepta celulares chilenos de 9 digitos con o sin codigo de pais`() {
+        assertEquals("+56 9 1234-5678", Validaciones.formatearTelefono("9 1234 5678"))
+        assertEquals("+56 9 1234-5678", Validaciones.formatearTelefono("912345678"))
+        assertEquals("+56 9 1234-5678", Validaciones.formatearTelefono("56 9 1234 5678"))
+        assertEquals("+56 9 1234-5678", Validaciones.formatearTelefono("+56912345678"))
+    }
+
+    @Test
     fun `no formatea telefonos con letras o largo incorrecto`() {
-        listOf("abc", "912345678", "1234567890123", "91234x5678", "").forEach {
+        listOf("abc", "12345678", "54912345678", "1234567890123", "91234x5678", "").forEach {
             assertNull(Validaciones.formatearTelefono(it), it)
         }
     }

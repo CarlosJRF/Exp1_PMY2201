@@ -21,6 +21,7 @@ class ResumenKotlinAvanzadoTest {
     @Test
     fun `muestra los resultados esperados de cada concepto`() {
         assertContains(resumen, "\"9123456789\" → +56 (912) 345-6789")
+        assertContains(resumen, "\"9 1234 5678\" → +56 9 1234-5678")
         assertContains(resumen, "15-11-2026 → dentro del rango, aplica descuento")
         assertContains(resumen, "Promoción Noviembre Pizzero                  -\$5.170")
         assertContains(resumen, "cliente = Ana · total = \$48.404")

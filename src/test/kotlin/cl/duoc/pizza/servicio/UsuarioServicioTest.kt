@@ -29,6 +29,7 @@ class UsuarioServicioTest {
 
         assertEquals("ana@duoc.cl", usuario.email)
         assertEquals("+56 (912) 345-6789", usuario.telefono)
+        assertEquals("+56 9 8765-4321", servicio.registrar("Luis", "luis@duoc.cl", "secreto", "9 8765 4321", "Los Aromos 45").telefono)
         assertNotEquals("secreto", usuario.passwordHash)
         assertTrue(usuario.passwordHash.startsWith("\$argon2id\$"))
         assertTrue(usuario.validarPassword("secreto"))
