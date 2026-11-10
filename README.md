@@ -27,7 +27,7 @@ pensado para evolucionar más adelante a una app móvil.
 - **Notificaciones** en consola al cliente (solo si tiene un email válido) cuando cambia su pedido.
 - **Resumen del pedido:** datos del cliente, productos (nombre, precio, cantidad), subtotal,
   descuentos, IVA, total, estado y notas. Se muestra como confirmación al cliente.
-- **Resumen de Kotlin avanzado** (menú principal, opción 3): muestra y guarda en `resumen-kotlin-avanzado.txt`
+- **Resumen de Kotlin avanzado** (menú principal, opción 3 "Ver resumen de sistema en consola"): muestra y guarda en `resumen-kotlin-avanzado.txt`
   las validaciones (Regex y Ranges), pedidos combinados con `+`, desestructuración de cliente y pedido,
   productos promocionables, igualdad de objetos (`equals`/`hashCode`) y la reflection de las clases principales.
 - **Administrador:** inventario de ingredientes con aviso de stock bajo, reposición, listado de pedidos,

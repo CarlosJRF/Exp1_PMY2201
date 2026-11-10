@@ -26,7 +26,7 @@ class MenuPrincipal(
     fun iniciar() {
         consola.mensaje("🍕 Bienvenido a DuocPizza 🍕")
         while (true) {
-            val opciones: List<String> = listOf("Registrarse", "Iniciar sesión", "Ver resumen de Kotlin avanzado")
+            val opciones: List<String> = listOf("Registrarse", "Iniciar sesión", "Ver resumen de sistema en consola")
             when (consola.menu("Menú principal", opciones, "Salir")) {
                 1 -> consola.intentar { registrar() }
                 2 -> consola.intentar { iniciarSesion() }
